@@ -46,6 +46,29 @@ k = -1 when j = 0;
     return next;
     }
     
+#####求特征向量的算法框架：优化版(ppt上的原代码)
+
+    int *findNext(string P) {
+    	int i = 0; 
+        int k = -1; 
+        int m = P.length();    					// m为字符串P的长度
+      	assert(m > 0);     					// 若m＝0，退出
+      	int *next = new int[m];  				// 动态存储区开辟整数数组
+        assert(next != 0);   					// 若开辟存储区域失败，退出
+      	next[0] = -1;
+        while (j < m) { 						// 计算i=1..m-1的next值
+    		while (k >= 0 && P[j] != P[k])  		// 求最大首尾子串
+    			k = next[k];		
+            j++;
+    		k++;
+    		if (j == m) break;
+    		if (P[j] == P[k] ) 				
+    			next[j] = next[k];				//  P[i]和P[k]相等，优化
+    		else next[j] = k;					// 不需要优化，就是位置i的首尾子串长度
+        }
+        return next;
+    }
+    
 #####在计算好特征向量N[j]之后，匹配算法很简单就能实现：
     int KMPStrMatching(string T, string P, int *N, int start){
     int j = 0;
