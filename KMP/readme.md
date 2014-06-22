@@ -71,25 +71,28 @@ k = -1 when j = 0;
     }
     
 #####在计算好特征向量N[j]之后，匹配算法很简单就能实现：
-    int KMPStrMatching(string T, string P, int *N, int start){
-    int j = 0;
-    int i = start;
-    int pLen = P.length();
-    int tLen = T.length();
+
+    int KMPStrMatching(string T, string P,  int *N) {
+        int i = 0;							// 模式的下标变量
+        int j = 0;							// 目标的下标变量
+        int pLen = P.length();             		// 模式的长度
+        int tLen = T.length();					// 目标的长度
     
-    if(tLen - start)  return(-1);
+        if (tLen < pLen) 				    		// 如果目标比模式短，匹配无法成功
+            return (-1);
     
-    while (j < pLen && i < tLen) {
-        if (j == -1 || T[i] == P[j])
-            i++, j++;
-        else
-            j = N[j];
-    }
+        while ( i < pLen  &&  j < tLen)  {  		// 反复比较对应字符来开始匹配
+           		if ( i == -1  ||  T[j] == P[i]) 
+        			i++,  j++;
+    			//向后移动位数 = 已匹配的字符数N[i] - 对应的部分匹配值
+    			//等价于重新从N[i]表示的那个数开始计数
+        		else i = N[i];	
     
-    if(j >= pLen)
-        return (i-pLen);
-    else
-        return (-1);
+        }
+    
+        if ( i >= pLen)
+        		return (j - pLen);
+        else return (-1);
     }
     
 
