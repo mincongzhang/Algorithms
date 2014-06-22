@@ -49,7 +49,7 @@ k = -1 when j = 0;
 #####求特征向量的算法框架：优化版(ppt上的原代码)
 
     int *findNext(string P) {
-    	int i = 0; 
+    	int j = 0; 
         int k = -1; 
         int m = P.length();    					// m为字符串P的长度
       	assert(m > 0);     					// 若m＝0，退出
