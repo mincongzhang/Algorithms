@@ -1,0 +1,3171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0088)http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+<meta name="generator" content="Movable Type  5.2.2">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/styles.css" type="text/css">
+<link rel="start" href="http://www.ruanyifeng.com/blog/" title="Home">
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="http://feeds.feedburner.com/ruanyifeng">
+<script type="text/javascript" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="http://www.ruanyifeng.com/blog/2013/11/ko_wen-je.html">
+<dc:title>柯文哲《生死的智慧》</dc:title>
+<dc:description>三天前，柯文哲医师在今年Ted Taipei的演讲《生死的智慧》，放上了Youtube。...</dc:description>
+<dc:creator>阮一峰</dc:creator>
+<dc:date>2013-11-03T23:13:31+08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+
+    
+    <link rel="prev bookmark" href="http://www.ruanyifeng.com/blog/2013/04/processes_and_threads.html" title="进程与线程的一个简单解释">
+    <link rel="next bookmark" href="http://www.ruanyifeng.com/blog/2013/05/boyer-moore_string_search_algorithm.html" title="字符串匹配的Boyer-Moore算法">
+    
+    <title>字符串匹配的KMP算法 - 阮一峰的网络日志</title>
+<script src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bsStatic.js" type="text/javascript" charset="utf-8"></script><script src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bs-engine.js" type="text/javascript" charset="utf-8"></script><style type="text/css">a.bshareDiv,#bsPanel,#bsMorePanel,#bshareF{border:none;background:none;padding:0;margin:0;font:12px Helvetica,Calibri,Tahoma,Arial,宋体,sans-serif;line-height:14px;}#bsPanel div,#bsMorePanel div,#bshareF div{display:block;}.bsRlogo .bsPopupAwd,.bsRlogoSel .bsPopupAwd,.bsLogo .bsPopupAwd,.bsLogoSel .bsPopupAwd{line-height:16px !important;}a.bshareDiv div,#bsFloatTab div{*display:inline;zoom:1;display:inline-block;}a.bshareDiv img,a.bshareDiv div,a.bshareDiv span,a.bshareDiv a,#bshareF table,#bshareF tr,#bshareF td{text-decoration:none;background:none;margin:0;padding:0;border:none;line-height:1.2}a.bshareDiv span{display:inline;float:none;}div.buzzButton{cursor:pointer;font-weight:bold;}.buzzButton .shareCount a{color:#333}.bsStyle1 .shareCount a{color:#fff}span.bshareText{white-space:nowrap;}span.bshareText:hover{text-decoration:underline;}a.bshareDiv .bsPromo,div.bshare-custom .bsPromo{display:none;position:absolute;z-index:100;}a.bshareDiv .bsPromo.bsPromo1,div.bshare-custom .bsPromo.bsPromo1{width:51px;height:18px;top:-18px;left:0;line-height:16px;font-size:12px !important;font-weight:normal !important;color:#fff;text-align:center;background:url(http://static.bshare.cn/frame/images/bshare_box_sprite2.gif) no-repeat 0 -606px;}div.bshare-custom .bsPromo.bsPromo2{background:url(http://static.bshare.cn/frame/images/bshare_promo_sprite.gif) no-repeat;cursor:pointer;}</style><style type="text/css">.bsBox{display:none;z-index:100000001;font-size:12px;background:url(http://static.bshare.cn/frame/images//background-opaque-dark.gif) !important;padding:6px !important;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;}.bsClose{_overflow:hidden;cursor:pointer;position:absolute;z-index:10000000;color:#666;font-weight:bold;font-family:Helvetica,Arial;font-size:14px;line-height:20px;}.bsTop{color:#666;background:#f2f2f2;height:24px;line-height:24px;border-bottom:1px solid #e8e8e8;}.bsTop span{float:left;}.bsFrameDiv,#bsMorePanel{border:none;background:#fff;}.bsReturn{float:right;*margin-right:20px;margin-right:36px;text-align:right;cursor:pointer;line-height:24px;color:#666;opacity:0.5;}#bsReturn:hover{text-decoration:underline;opacity:1;}</style><script src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bsMore.js" type="text/javascript" charset="utf-8"></script><script src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bshareS1.js" type="text/javascript" charset="utf-8"></script><style type="text/css">div.bsClear{clear:both;height:0;line-height:0;overflow:hidden;font-size:0;}.bsSearchDiv{padding:5px 15px;background-color:#fafafa;}.bFind-wrapper-top{background:#fff;border-color:#ccc #aaa #aaa #ccc;border-style:solid;border-width:1px;height:16px;padding:4px;margin:0;}.bFind-wrapper-top input{padding:0 !important;border:none !important;box-shadow:none !important;line-height:16px !important;}.bFind-placeholder{background:url("http://static.bshare.cn/css/images/search-icon.gif") no-repeat;display:block;float:left;height:16px;width:16px;}.bFind{background:none;border:none;float:left;font-size:11px !important;height:16px !important;margin-left:3px;outline:none;padding:0;width:400px;}.bsPlatDiv{height:322px;background:#fff;overflow:auto;padding:0 15px;}#bsLogoList{display:block;list-style:none;overflow:hidden;margin:0;padding:0;}#bsLogoList li{float:left;display:inline-block;width:71px;text-align:center;font-size:12px;height:80px;margin:0 !important;}#bsLogoList .bsPlatIcon{cursor:pointer;display:block !important;text-align:center;}#bsLogoList .bsPlatImg{width:32px;height:32px;border:none !important;display:inline-block;}#bsLogoList .bsPlatImg:hover{-moz-border-radius:7px;-webkit-border-radius:7px;border-radius:7px;box-shadow:0 0 15px #a7a8ac;}#bsLogoList .bsPlatName{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;text-align:center;color:#333 !important;margin-top:2px;line-height:140%;*width:70px;}#bsLogoList .bsPromoM{text-align:center;}.bsFooterDiv{height:24px;line-height:24px;padding:0 15px;border-top:1px solid #e8e8e8;background:#f2f2f2;text-align:right;}a.bsLogoLink{color:#666;}.bsLogoLink:hover{text-decoration:underline;}.bsPromoM{background:url(http://static.bshare.cn/frame/images//bshare_box_sprite2.gif) no-repeat top left;}.bsNew,.bsHot,.bsRec,.bsAwd{background-position:0 -552px;width:19px;margin:5px auto 1px;line-height:16px;height:18px;font-size:12px;color:#fff;overflow:hidden;}.bsNew{background-position:0 -570px;}.bsRec{width:30px;background-position:0 -588px;}.bsAwd{background:url(http://static.bshare.cn/frame/images//promot/promote.gif) no-repeat;}</style><script src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bshare_view" type="text/javascript" charset="utf-8"></script><style type="text/css">a.bsSiteLink{text-decoration:none;color:#666;}a.bsSiteLink:hover{text-decoration:underline;}a.bshareDiv{overflow:hidden;height:16px;line-height:18px;font-size:14px;color:#333;padding-left:0;}a.bshareDiv:hover{text-decoration:none;}div.bsTitle{padding:0 8px;border-bottom:1px solid #e8e8e8;color:#666;background:#f2f2f2;text-align:left;}div.buzzButton{cursor:pointer;}div.bsRlogo,div.bsRlogoSel{width:68px;float:left;margin:0;padding:2px 0;}div.bsRlogo a,div.bsRlogoSel a{float:left;}div.bsLogo,div.bsLogoSel{float:left;width:111px;text-align:left;height:auto;padding:2px 4px;margin:2px 0;white-space:nowrap;overflow:hidden;}div.bsLogoSel,div.bsRlogoSel{border:1px solid #ddd;background:#f1f1f1;}div.bsLogo,div.bsRlogo{border:1px solid #fff;background:#fff;}div.bsLogo a,div.bsLogoSel a{display:block;height:16px;line-height:16px;padding:0 0 0 24px;text-decoration:none;float:left;overflow:hidden;}div.bsLogoSel a,div.bsRlogoSel a{color:#000;border:none;}div.bsLogo a,div.bsRlogo a{color:#666;border:none;}div.bsLogoLink{width:121px;overflow:hidden;background:#FFF;float:left;margin:3px 0;}#bsLogin{float:right;text-align:right;overflow:hidden;height:100%;}#bsPanel{position:absolute;z-index:100000000;font-size:12px;width:258px;background:url(http://static.bshare.cn/frame/images/background-opaque-dark.png) !important;padding:6px !important;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;}div.bsClear{clear:both;height:0;line-height:0;font-size:0;overflow:hidden;}div.bsPopupAwd{background:url(http://static.bshare.cn/frame/images//bshare_box_sprite2.gif) no-repeat top left;background-position:0 -624px;width:18px;padding-left:3px;text-align:center;float:left;margin-left: 2px;height:15px;font-size:12px;color:#fff;overflow:hidden;}div.bsRlogo .bsPopupAwd,div.bsRlogoSel .bsPopupAwd{float:left;margin:5px 0 0 -14px;}</style><style type="text/css">a.bsSiteLink{text-decoration:none;color:#666;}a.bsSiteLink:hover{text-decoration:underline;}a.bshareDiv{overflow:hidden;height:16px;line-height:18px;font-size:14px;color:#333;padding-left:0;}a.bshareDiv:hover{text-decoration:none;}div.bsTitle{padding:0 8px;border-bottom:1px solid #e8e8e8;color:#666;background:#f2f2f2;text-align:left;}div.buzzButton{cursor:pointer;}div.bsRlogo,div.bsRlogoSel{width:68px;float:left;margin:0;padding:2px 0;}div.bsRlogo a,div.bsRlogoSel a{float:left;}div.bsLogo,div.bsLogoSel{float:left;width:111px;text-align:left;height:auto;padding:2px 4px;margin:2px 0;white-space:nowrap;overflow:hidden;}div.bsLogoSel,div.bsRlogoSel{border:1px solid #ddd;background:#f1f1f1;}div.bsLogo,div.bsRlogo{border:1px solid #fff;background:#fff;}div.bsLogo a,div.bsLogoSel a{display:block;height:16px;line-height:16px;padding:0 0 0 24px;text-decoration:none;float:left;overflow:hidden;}div.bsLogoSel a,div.bsRlogoSel a{color:#000;border:none;}div.bsLogo a,div.bsRlogo a{color:#666;border:none;}div.bsLogoLink{width:121px;overflow:hidden;background:#FFF;float:left;margin:3px 0;}#bsLogin{float:right;text-align:right;overflow:hidden;height:100%;}#bsPanel{position:absolute;z-index:100000000;font-size:12px;width:258px;background:url(http://static.bshare.cn/frame/images/background-opaque-dark.png) !important;padding:6px !important;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;}div.bsClear{clear:both;height:0;line-height:0;font-size:0;overflow:hidden;}div.bsPopupAwd{background:url(http://static.bshare.cn/frame/images//bshare_box_sprite2.gif) no-repeat top left;background-position:0 -624px;width:18px;padding-left:3px;text-align:center;float:left;margin-left: 2px;height:15px;font-size:12px;color:#fff;overflow:hidden;}div.bsRlogo .bsPopupAwd,div.bsRlogoSel .bsPopupAwd{float:left;margin:5px 0 0 -14px;}</style></head>
+<body id="scrapbook" class="mt-entry-archive one-column" onload="individualArchivesOnLoad(commenter_name)">
+    <div id="container">
+        <div id="container-inner">
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+
+
+            <div id="header-name">阮一峰的网络日志 <span id="site_location"> » <a href="http://www.ruanyifeng.com/blog/" accesskey="1">首页</a></span><span id="site_archive"> » <a href="http://www.ruanyifeng.com/blog/archives.html">档案</a></span>
+</div>
+
+<div id="google_search">
+<!-- SiteSearch Google -->
+<form action="http://www.ruanyifeng.com/blog/search.html" id="cse-search-box">
+      <div>
+        <input type="hidden" name="cx" value="016304377626642577906:b_e9skaywzq">
+    <input type="hidden" name="cof" value="FORID:11">
+    <input type="hidden" name="ie" value="UTF-8">
+        <input type="text" name="q" size="20" class="searchbox" id="sbi" value="">
+        <input type="image" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/top_search_submit.gif" class="searchbox_submit" value="" alt="搜索" name="sa">
+      </div>
+    </form>
+<!-- SiteSearch Google -->
+</div>
+<div id="feed_icon">
+<a href="http://www.ruanyifeng.com/feed.html" title="订阅Feed">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAUzSURBVHjavFdbbFRVFF3nPjoz7dTWTittaW0jUDRAUqaNojyqREnEQKgfUj9MqqAmhqRt/OCD4CuY+Kckoh+aiGKC+gMJbdHoRysJ8dkhhmJLNdDKtJU+6GMK87j3Hs85d2Z6HzNtMYWb3Dn3NWftvfba+5xNYDl+e6Fkj6yqb/oDRbWq14vlPBLRKCITkxf0ROLt+hNjp1PPSRK4kA3vF1dXNRcWlyA2OQU9eos9opAkAiKxD+XkKO6t15aRWO7J/MgmAZU8MEgexgZHMX518Dh72sYMmVKShnxWuWHdHtxKIDIYTgMuDzgfmSOIQkYMpdUF8OY92Hytt4/jvkg47czzU16iQovM3QFwmNck+Yyduu7D6NA0Z6JR4THntFs9V4tWQg6Ui3s6MwKDncsFTnXKLJhDSeUK3AgPtyhccDzmVs999buRt/1Vm4i0od+hX7+MRG87jPGB/w1u8FPj9xEw7McVrnYuOCvtpjTth3J/nTg99c8LRhKhr6D3dTB5R24bXFwbMXBsyZzeoXaycEpJ95TB09AGX/NpqLVNtw8urnVzLvHjFNxiFqRy2OOHuqUVnue+ACkoWzo4O6lGzTmuHq6nPvY2m9rVqjrIK2rMEKxqyG5NPAKt+wjo0LklgfNxJkZMA3KJvqRUk3z5UFY3QH14P0h+WUY79HPvgv7VuSg4ZRGY1YgZgqXmORccF17sy2ehnf9AeO085K2HQFbtXBScj0LcpgF2cN+WV+DZ/LJQu6gD4R7oV7pBJwbSgtMvfiPoVp56DySwxm7EtkMs1WdAB7qzggsDJKQYsHucSkOudrkiCPWR/fA2nYCn8SNIK4NptSMyAu3sAdDRkIsJdfth0LzSrODUoPNZ4KI9SxJI5UHk7D4GdQfz2us31c7CoHMjRkKuDPHseCMrONVhNcDJwMJpKFVvg9L4OaTiNWm1x789KCqkrXhVBiEz0WYCT2nAzQAD1/vaETv1GrRfP4Vx5cfMNcDPwvP0h0DhanPym7OIf/+O67vcJ1/PCJ4KgdzaUP6Wz+dU+5yIL6fV+PsHGAOdwlPpvvUOyeeAVGyCdqkDNB6DPjsBSrnndfOGevOh3RhGItxvA+fX1CtbGFhgYUFkFMZPR6F1HnClHq8HyubWtJexX06CRmdt33hrd7nA7SFY4qoGpnYuOKcRykPPgDCBcsHx9Iv+fNL2PueBehCWUfYQIIMGLOCcOmXDXsh1+yCt35tUPfvzGFuSvzvoinXOxqa02qOhM6733nVP2MAdaej2XN11DPKjLZCD+yBvahGCo7JfTKAN9UD7s8Oe9zUNIhz8fWI8DG2k38WCFdxugANcXrvTVd1IEbuv3Jour7Hzn7jLMBNfKs7R3i67gRVrbeCOEDhinmWhAatsqdquM2XzHZINhK2cqTjHr/XZdVJUbgN3MWAVXKbSyg9jesRW2xP9di+lwrL5ojM3m2H/kG9hwcIA37c71W6wJdW2J2S5nrjYbq/t1AHAhJsKQeyfPvf6IMJgghPJhFZ4x0KlfLFvt22du45Au/A1SOlGc0P672XXwhLtOcM0kTTEMMd0qkVmMNXxMd/tsedUjInr4SQDgOfeXMSiN0FCL5WHah4L1qqYXPJOJlttd+a5M+YpcG5poLYKQ5f+6JJ4r8bbJYP47hq4r7QAs9PjYNhHJd4o8l5taiwuOpa7AS4XKqI/5NjJbTnaWK92nLdLuhQAJayRNMiygXPBeQN+Qbvu0zDc3y+aUzhbkGR73sI7ljvUnndx2q3t+X8CDAD66FtrIL864AAAAABJRU5ErkJggg==" alt="" style="border: 0pt none;">
+</a></div>
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1775" class="entry-asset asset hentry">
+                                <div class="asset-header">
+<div class="asset-nav entry-nav">
+
+<div class="entry-location">
+<ul>
+<li>上一篇：<a href="http://www.ruanyifeng.com/blog/2013/04/processes_and_threads.html" title="进程与线程的一个简单解释">进程与线程的一个简单解</a></li>
+<li>下一篇：<a href="http://www.ruanyifeng.com/blog/2013/05/boyer-moore_string_search_algorithm.html" title="字符串匹配的Boyer-Moore算法">字符串匹配的Boyer</a></li>
+</ul>
+</div>
+
+
+
+    
+                                    <div class="entry-categories">
+                                        <p>分类<span class="delimiter">：</span></p>
+                                        <ul>
+                                            <li><a href="http://www.ruanyifeng.com/blog/computer/" rel="tag">理解计算机</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+
+                                            
+</div>
+                                </div>
+<article class="hentry">
+                                    <h1 id="page-title" class="asset-name entry-title">字符串匹配的KMP算法</h1>
+                                            <div id="share_button" style="float:right;padding-right:2em;padding-top:1em;"><a class="bshareDiv" href="http://www.bshare.cn/share" style="display: block; text-decoration: none; padding: 0px; margin: 0px; font-size: 12px; height: 21px; width: 51px;"><div class="bsPromo bsPromo1"></div><div class="buzzButton bsStyle10" style="height:21px;color:#333;;background:transparent url(http://static.bshare.cn/frame/images/button_custom10-zh-Orange.gif) no-repeat;text-align:center;width:51px;"></div><div style="clear:both;"></div></a><script type="text/javascript" charset="utf-8" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/buttonLite.js"></script>                                       
+<script type="text/javascript" charset="utf-8">
+bShare.addEntry({
+    title: document.getElementById("page-title").innerHTML,
+url:window.location.href
+});
+</script></div>
+                                    <div class="asset-meta">
+                                        
+
+                                            <p class="vcard author">作者： <a class="fn url" href="http://www.ruanyifeng.com/">阮一峰</a></p>
+
+
+                                    </div>
+                                
+                                <div class="asset-content entry-content" id="main-content">
+
+                                    <!-- div class="asset-body" -->
+                                        <p><a href="http://en.wikipedia.org/wiki/String_searching_algorithm" target="_blank">字符串匹配</a>是计算机的基本任务之一。</p>
+                                    <!-- /div -->
+
+
+                                    <!-- div id="more" class="asset-more" -->
+                                        <p>举例来说，有一个字符串"BBC ABCDAB ABCDABCDABDE"，我想知道，里面是否包含另一个字符串"ABCDABD"？</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050101.jpg"></p>
+
+<p>许多算法可以完成这个任务，<a href="http://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm" target="_blank">Knuth-Morris-Pratt算法</a>（简称KMP）是最常用的之一。它以三个发明者命名，起头的那个K就是著名科学家Donald Knuth。</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050102.jpg"></p>
+
+<p>这种算法不太容易理解，网上有很多<a href="http://www.google.com/search?q=Knuth-Morris-Pratt+algorithm" target="_blank">解释</a>，但读起来都很费劲。直到读到<a href="http://jakeboxer.com/blog/2009/12/13/the-knuth-morris-pratt-algorithm-in-my-own-words/" target="_blank">Jake Boxer</a>的文章，我才真正理解这种算法。下面，我用自己的语言，试图写一篇比较好懂的KMP算法解释。</p>
+
+<p>1.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050103.png"></p>
+
+<p>首先，字符串"BBC ABCDAB ABCDABCDABDE"的第一个字符与搜索词"ABCDABD"的第一个字符，进行比较。因为B与A不匹配，所以搜索词后移一位。</p>
+
+<p>2.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050104.png"></p>
+
+<p>因为B与A不匹配，搜索词再往后移。</p>
+
+<p>3.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050105.png"></p>
+
+<p>就这样，直到字符串有一个字符，与搜索词的第一个字符相同为止。</p>
+
+<p>4.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050106.png"></p>
+
+<p>接着比较字符串和搜索词的下一个字符，还是相同。</p>
+
+<p>5.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050107.png"></p>
+
+<p>直到字符串有一个字符，与搜索词对应的字符不相同为止。</p>
+
+<p>6.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050108.png"></p>
+
+<p>这时，最自然的反应是，将搜索词整个后移一位，再从头逐个比较。这样做虽然可行，但是效率很差，因为你要把"搜索位置"移到已经比较过的位置，重比一遍。</p>
+
+<p>7.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050107.png"></p>
+
+<p>一个基本事实是，当空格与D不匹配时，你其实知道前面六个字符是"ABCDAB"。KMP算法的想法是，设法利用这个已知信息，不要把"搜索位置"移回已经比较过的位置，继续把它向后移，这样就提高了效率。</p>
+
+<p>8.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050109.png"></p>
+
+<p>怎么做到这一点呢？可以针对搜索词，算出一张《部分匹配表》（Partial Match Table）。这张表是如何产生的，后面再介绍，这里只要会用就可以了。</p>
+
+<p>9.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050107.png"></p>
+
+<p>已知空格与D不匹配时，前面六个字符"ABCDAB"是匹配的。查表可知，最后一个匹配字符B对应的"部分匹配值"为2，因此按照下面的公式算出向后移动的位数：</p>
+
+<blockquote>
+
+<p>　　移动位数 = 已匹配的字符数 - 对应的部分匹配值</p>
+
+</blockquote>
+
+<p>因为 6 - 2 等于4，所以将搜索词向后移动4位。</p>
+
+<p>10. </p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050110.png"></p>
+
+<p>因为空格与Ｃ不匹配，搜索词还要继续往后移。这时，已匹配的字符数为2（"AB"），对应的"部分匹配值"为0。所以，移动位数 = 2 - 0，结果为 2，于是将搜索词向后移2位。</p>
+
+<p>11.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050111.png"></p>
+
+<p>因为空格与A不匹配，继续后移一位。</p>
+
+<p>12.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050112.png"></p>
+
+<p>逐位比较，直到发现C与D不匹配。于是，移动位数 = 6 - 2，继续将搜索词向后移动4位。</p>
+
+<p>13.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050113.png"></p>
+
+<p>逐位比较，直到搜索词的最后一位，发现完全匹配，于是搜索完成。如果还要继续搜索（即找出全部匹配），移动位数 = 7 - 0，再将搜索词向后移动7位，这里就不再重复了。</p>
+
+<p>14.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050114.png"></p>
+
+<p>下面介绍《部分匹配表》是如何产生的。</p>
+
+<p>首先，要了解两个概念："前缀"和"后缀"。 "前缀"指除了最后一个字符以外，一个字符串的全部头部组合；"后缀"指除了第一个字符以外，一个字符串的全部尾部组合。</p>
+
+<p>15.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050109.png"></p>
+
+<p>"部分匹配值"就是"前缀"和"后缀"的最长的共有元素的长度。以"ABCDABD"为例，</p>
+
+<blockquote>
+
+<p>　　－　"A"的前缀和后缀都为空集，共有元素的长度为0；</p>
+
+<p>　　－　"AB"的前缀为[A]，后缀为[B]，共有元素的长度为0；</p>
+
+<p>　　－　"ABC"的前缀为[A, AB]，后缀为[BC, C]，共有元素的长度0；</p>
+
+<p>　　－　"ABCD"的前缀为[A, AB, ABC]，后缀为[BCD, CD, D]，共有元素的长度为0；</p>
+
+<p>　　－　"ABCDA"的前缀为[A, AB, ABC, ABCD]，后缀为[BCDA, CDA, DA, A]，共有元素为"A"，长度为1；</p>
+
+<p>　　－　"ABCDAB"的前缀为[A, AB, ABC, ABCD, ABCDA]，后缀为[BCDAB, CDAB, DAB, AB, B]，共有元素为"AB"，长度为2；</p>
+
+<p>　　－　"ABCDABD"的前缀为[A, AB, ABC, ABCD, ABCDA, ABCDAB]，后缀为[BCDABD, CDABD, DABD, ABD, BD, D]，共有元素的长度为0。</p>
+
+</blockquote>
+
+<p>16.</p>
+
+<p><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/bg2013050112.png"></p>
+
+<p>"部分匹配"的实质是，有时候，字符串头部和尾部会有重复。比如，"ABCDAB"之中有两个"AB"，那么它的"部分匹配值"就是2（"AB"的长度）。搜索词移动的时候，第一个"AB"向后移动4位（字符串长度-部分匹配值），就可以来到第二个"AB"的位置。</p>
+
+<p>（完）<br>
+</p>
+                                    <!-- /div -->
+
+                                </div>
+    <script type="text/javascript" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/newwindow.js"></script>
+                                <div class="asset-footer">
+
+<h3>文档信息</h3>
+<ul>
+<li>版权声明：自由转载-非商用-非衍生-保持署名（<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">创意共享3.0许可证</a>）</li>
+<li>发表日期： <abbr class="published" title="2013-05-01T18:46:48+08:00">2013年5月 1日</abbr></li>
+<li>更多内容： <a href="http://www.ruanyifeng.com/blog/archives.html" target="_blank"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUBAMAAAB/pwA+AAAAG1BMVEUxAAAdHRseHhwfHx0fHx4gIB4hIR8iIiAjIyCMbVMLAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfeBgwBJS9jlhpuAAAAcUlEQVQI122OOxKAIAwFQYfegGCLBdjKUfAGNNZ6A49uws/GVDtvdnbCGB6fWLux4SnSNtwZg5PRQLKIMjiIGg5EHD1xFiBVQV0OnsWWRuvKoNFcaXEyIc80UtPklKBOEZjPo6pfDN9nfO8obMd/oawvhiwOwjTYfd0AAAAASUVORK5CYII=" style="border:0;"> 档案</a>  » 
+<a href="http://www.ruanyifeng.com/blog/computer/"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUBAMAAAB/pwA+AAAAG1BMVEUxAAAdHRseHhwfHx0fHx4gIB4hIR8iIiAjIyCMbVMLAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfeBgwBJS9jlhpuAAAAcUlEQVQI122OOxKAIAwFQYfegGCLBdjKUfAGNNZ6A49uws/GVDtvdnbCGB6fWLux4SnSNtwZg5PRQLKIMjiIGg5EHD1xFiBVQV0OnsWWRuvKoNFcaXEyIc80UtPklKBOEZjPo6pfDN9nfO8obMd/oawvhiwOwjTYfd0AAAAASUVORK5CYII=" style="border:0;"> 理解计算机</a> 
+</li>
+<li>付费支持：<a href="http://www.ruanyifeng.com/blog/2014/05/my_blog_book.html" target="_blank"><img src="data:image/png;base64,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" style="border:0;"> 购买文集</a></li>
+<li>社交媒体：<a href="https://twitter.com/ruanyf" target="_blank"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAk1JREFUeNqsVc9rE0EU/mZ3dhPNJl2bVIk/Km09aFBE8GLvnrwJXvwLxIsgCP4Fnit6E8Gb0IMHwUsL9SSNgiAoooJIpE1Joo1h82uT7IxvxmRN3Q32kAdvdrI773vfe+/bDTu9WioDcDAda3Ja8piepQ1avCkCeny0Y+R9KenKwOmHHLvPaKn7AtVOoO8dOWDCMpg+41gMQv5FNEJACgoE8MsPNLDBhgfoutMOsJDmWLmU037C4TApciljwQ/kHoohQxV06+wMXNvE7WINuaSpvdYVKLgWnl3O4zAxU3Z1IYVGT+B5qYWV9z2kbQaT/cOwTsxOUUYF+mB5Dkmi8HG3h2q9hxsFNwRTdvQgxxnXRrMvIdkEhllis/qtiWuLDm4WZnBlPoWnXz28LHdw0uGR7m9Wu3j0qYGEubfn4UlBfXO4gTZltRNMg9w9f0i7kNFxllsBlS0x75gYfxyWTBUjT2W5CSMSPBrQuG21+hiMDS8CeCzF8eSLp13uQ3Ab1IqMFZN8tFHPmgOBF99bYP8Be1Xp6t7OJszJgKpPSiZvaj7uf2hguz2IBQuozDvFH6RDBjuK9wdQDvt0nMpW+8efGyh5UcAeZb2+UcHbnz5Jx4wdlp4yJYU3kLiQtfBwOYeLc8nIwfXtNu69q2Oz4mMxbemYOOOjKarhvq51KUjg3GwiFPIuvcNF6pnSnWK0lOEabNLgQh1aJFAhlGB9rG110B2+oyRNPc0sZbRNFltmLKDKqj4Qrm1ojzOxDz2pyPQ0P7CK4c40/wJ+CzAAGYrXsvfFXR4AAAAASUVORK5CYII=" style="border:0;"> twitter</a>，<a href="http://weibo.com/ruanyf" target="_blank"><img src="data:image/png;base64,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" style="border:0;"> weibo</a></li>
+<li>Feed订阅： <a href="http://www.ruanyifeng.com/feed.html" target="_blank"><img src="data:image/gif;base64,R0lGODlhFAAUANU2APV1GfmrePZ8IeR5VPq2ieNkLf7p3NpFJveCJ/NoFfibVPR1IexiJfvdzuZrNfXGuOhUEueTevaFOfzIpNxDGeZZJNU6IOubifiVTfOnid1aLuZpLOFSJf/28vJtIvGcefaLSd5kNu9iFv/z6//48//t4uFfLfNkCeJNGuGNc/rCof/+/PVxEeldI/V5KeKMbu9nIvB2OvzQtNxMKfOPXP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAADYALAAAAAAUABQAAAb/QJstEjKZCsjCZsl0pIS2QWXaYsA8noVWIEAgFoNhhWNyMESi7Jbr/aZCFdRnZJAFJCwAt+vlOkwtEBk1hDUkExJ6bQJaGyYMLTQTDSOFHQF8jAseSFYiJwkuAQ2FE1xaHjBIMDAgARguJwABJIQTLJswDEgeIgSEJQQILAqVNQEiui1HHgkBhTUGCiwYtR0xLS0VJhtaEgoEBoQkGCfPNSoQY9xaCwAsCBPALgmkJA4cZN0CAAgY/PJqEIDwgVAECjM0bOAnwcAKGQJclKhRgoGDDjUeUDigkN8vQiBOfByAglSDAxw3IBCgYEU0FyJoEPpA4UGNDjMsaHDQR8EdPVYOMmQYQGHAhQgHLIRIsWAlgASsGMRBMWMGBQtYZ7yIsoBRKkhjOMxAiXJGGCEpHGxIYsSIhrcaQmy1EQQAOw==" style="border:0;"></a></li>
+
+</ul>
+                                </div>
+</article>
+                            </div>
+
+<div id="related_entries">
+<h2>相关文章</h2>
+<ul>
+
+<li><strong>2013.11.29: <a href="http://www.ruanyifeng.com/blog/2013/11/stack.html">Stack的三种含义</a></strong>
+
+                           <div class="entry-body">
+                              学习编程的时候，经常会看到stack这个词，它的中文名字叫做"栈"。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2013.10.14: <a href="http://www.ruanyifeng.com/blog/2013/10/register.html">为什么寄存器比内存快？</a></strong>
+
+                           <div class="entry-body">
+                              计算机的存储层次（memory hierarchy）之中，寄存器（register）最快，内存其次，最慢的是硬盘。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2013.08.17: <a href="http://www.ruanyifeng.com/blog/2013/08/linux_boot_process.html">Linux 的启动流程</a></strong>
+
+                           <div class="entry-body">
+                              半年前，我写了《计算机是如何启动的？》，探讨BIOS和主引导记录的作用。
+                           </div>
+
+</li>
+
+ 
+<li><strong>2013.07.04: <a href="http://www.ruanyifeng.com/blog/2013/07/rsa_algorithm_part_two.html">RSA算法原理（二）</a></strong>
+
+                           <div class="entry-body">
+                              上一次，我介绍了一些数论知识。
+                           </div>
+
+</li>
+
+ 
+</ul>
+</div>
+
+
+<div id="googlead1">
+<h2>广告<a href="http://www.ruanyifeng.com/ads.html">（购买广告位）</a></h2>
+<div id="googlead1-inner">
+<div id="googlead1-left">
+<a href="http://www.ruanyifeng.com/ads.html" target="_blank"><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/ad_sale_s.png" style="border:none;"></a>
+</div>
+<div id="googlead1-right">
+
+<a href="https://www.grjsq.me/1069807" target="_blank"><img src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/ad_greenvpn_300.jpg" style="border:none;"></a>
+</div>
+</div>
+</div>
+                    
+
+                    <div id="comments" class="comments">
+
+
+    
+    
+        
+    <h2 class="comments-header">留言（76条）</h2>
+
+    <div id="comments-content" class="comments-content" style="clear: left;">
+        
+        <div id="comment-271152" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Shadowmourne</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271152">
+            <p>回想起了高中NOIP的日子……</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271152"><abbr class="published" title="2013-05-01T19:05:21+08:00">2013年5月 1日 19:05</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Shadowmourne.html" title="Shadowmourne的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Shadowmourne的这条留言" onclick="return CommentQuote(&#39;comment-quote-271152&#39;,&#39;Shadowmourne&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271153" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://kaifengjin.com" href="http://kaifengjin.com/" target="_blank" rel="nofollow">Mr.king</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271153">
+            <p>Robert Sedgewick <a href="https://class.coursera.org/algs4partII-001/lecture/40" rel="nofollow">https://class.coursera.org/algs4partII-001/lecture/40</a> 用自动机解释kmp，感觉更妙，就是实现的时候空间复杂度高点。个人感觉Sedgewick这个老头讲东西确实牛逼，很多看书很难理解的算法，他一讲就明白了，有兴趣的可以去part1看看他讲的红黑树，特别牛逼。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271153"><abbr class="published" title="2013-05-01T19:34:16+08:00">2013年5月 1日 19:34</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Mr.king.html" title="Mr.king的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Mr.king的这条留言" onclick="return CommentQuote(&#39;comment-quote-271153&#39;,&#39;Mr.king&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271156" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">test</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271156">
+            <p>有时候，字符串内部会有重复。比如，"ABCDAB"之中有两个"AB"，那么它的"部分匹配值"就是2（"AB"的长度）<br>
+这个应该说是，字符串头部和尾部有重复？<br>
+如果是ABCABD这样即使有两个AB也不能部分移动吧</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271156"><abbr class="published" title="2013-05-01T19:42:34+08:00">2013年5月 1日 19:42</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/test.html" title="test的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用test的这条留言" onclick="return CommentQuote(&#39;comment-quote-271156&#39;,&#39;test&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271157" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://marspring.mobi" href="http://marspring.mobi/" target="_blank" rel="nofollow">hoot</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271157">
+            <p>的确简单易懂，可以来一本适用指南啊，想当初看这个算法 话了我好几天去理解 各种数学符号，各种证明 头都大了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271157"><abbr class="published" title="2013-05-01T19:51:11+08:00">2013年5月 1日 19:51</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/hoot.html" title="hoot的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用hoot的这条留言" onclick="return CommentQuote(&#39;comment-quote-271157&#39;,&#39;hoot&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271158" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271158">
+            <blockquote>
+<pre>引用test的发言：</pre>
+
+<p>这个应该说是，字符串头部和尾部有重复？<br>
+如果是ABCABD这样即使有两个AB也不能部分移动吧</p>
+
+</blockquote>
+
+<p>谢谢指出，我确实没想到这一点，已经更正了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271158"><abbr class="published" title="2013-05-01T20:12:44+08:00">2013年5月 1日 20:12</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%98%AE%E4%B8%80%E5%B3%B0.html" title="阮一峰的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote(&#39;comment-quote-271158&#39;,&#39;阮一峰&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271160" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">pi1ot</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271160">
+            <p>那就是说需要搜索的词如果内部完全没有重复，那这个算法就退化成了遍历？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271160"><abbr class="published" title="2013-05-01T20:31:23+08:00">2013年5月 1日 20:31</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/pi1ot.html" title="pi1ot的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用pi1ot的这条留言" onclick="return CommentQuote(&#39;comment-quote-271160&#39;,&#39;pi1ot&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271161" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://eshock.github.com" href="http://eshock.github.com/" target="_blank" rel="nofollow">Chris</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271161">
+            <p>因为空格与A不匹配，继续后移一位。<br>
+但是这个移动位数 = 已匹配的字符数 - 对应的部分匹配值 = 0 - 0 = 0矛盾啊？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271161"><abbr class="published" title="2013-05-01T20:48:56+08:00">2013年5月 1日 20:48</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Chris.html" title="Chris的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Chris的这条留言" onclick="return CommentQuote(&#39;comment-quote-271161&#39;,&#39;Chris&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271162" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.blogjava.net/chinan" href="http://www.blogjava.net/chinan" target="_blank" rel="nofollow">hejianchao</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271162">
+            <p>原来如此。解释得真清晰！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271162"><abbr class="published" title="2013-05-01T20:51:38+08:00">2013年5月 1日 20:51</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/hejianchao.html" title="hejianchao的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用hejianchao的这条留言" onclick="return CommentQuote(&#39;comment-quote-271162&#39;,&#39;hejianchao&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271163" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271163">
+            <blockquote>
+<pre>引用Chris的发言：</pre>
+
+<p>因为空格与A不匹配，继续后移一位。<br>
+但是这个移动位数 = 已匹配的字符数 - 对应的部分匹配值 = 0 - 0 = 0矛盾啊？</p>
+
+</blockquote>
+
+<p>不是。如果第一个字符就不匹配，搜索词直接比较下一个字符，不用考虑《部分匹配表》。</p>
+
+<p>表中第一列的那个“A”，是指有一个A匹配。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271163"><abbr class="published" title="2013-05-01T21:15:37+08:00">2013年5月 1日 21:15</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%98%AE%E4%B8%80%E5%B3%B0.html" title="阮一峰的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote(&#39;comment-quote-271163&#39;,&#39;阮一峰&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271164" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.thoughts-of.me" href="http://www.thoughts-of.me/" target="_blank" rel="nofollow">t.k.</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271164">
+            <p>是我最喜欢的算法之一。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271164"><abbr class="published" title="2013-05-01T21:16:43+08:00">2013年5月 1日 21:16</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/t.k..html" title="t.k.的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用t.k.的这条留言" onclick="return CommentQuote(&#39;comment-quote-271164&#39;,&#39;t.k.&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271166" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">RedNax</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271166">
+            <p>我一直以为KMP是string search最优的算法（时间复杂度是O(n+k)）,直到我知道了Boyer–Moore算法……才发现原来还有更加巧妙的方法……</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271166"><abbr class="published" title="2013-05-01T21:40:42+08:00">2013年5月 1日 21:40</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/RedNax.html" title="RedNax的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用RedNax的这条留言" onclick="return CommentQuote(&#39;comment-quote-271166&#39;,&#39;RedNax&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271167" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://sokoban.ws" href="http://sokoban.ws/" target="_blank" rel="nofollow">sokoban</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271167">
+            <blockquote>
+<pre>引用pi1ot的发言：</pre>
+
+<p>那就是说需要搜索的词如果内部完全没有重复，那这个算法就退化成了遍历？</p>
+
+</blockquote>
+
+<p><br>
+没错，这个算法本质上就是在遍历基础上的一个改进。在最坏的情况下，和没有改进之前一样，甚至严格说还差了一点点，因为每一步都多了比较的开销。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271167"><abbr class="published" title="2013-05-01T21:42:31+08:00">2013年5月 1日 21:42</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/sokoban.html" title="sokoban的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用sokoban的这条留言" onclick="return CommentQuote(&#39;comment-quote-271167&#39;,&#39;sokoban&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271169" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Chris</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271169">
+            <blockquote>
+<pre>引用sokoban的发言：</pre>
+
+<p></p>
+
+<p><br>
+没错，这个算法本质上就是在遍历基础上的一个改进。在最坏的情况下，和没有改进之前一样，甚至严格说还差了一点点，因为每一步都多了比较的开销。</p>
+
+</blockquote>
+
+<blockquote>
+<pre>引用pi1ot的发言：</pre>
+
+<p>那就是说需要搜索的词如果内部完全没有重复，那这个算法就退化成了遍历？</p>
+
+</blockquote>
+
+<p>应该不是的吧，最坏情况下也是o(m+n)的，而遍历是o(m*n)<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271169"><abbr class="published" title="2013-05-01T21:56:24+08:00">2013年5月 1日 21:56</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Chris.html" title="Chris的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Chris的这条留言" onclick="return CommentQuote(&#39;comment-quote-271169&#39;,&#39;Chris&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271170" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://sokoban.ws" href="http://sokoban.ws/" target="_blank" rel="nofollow">sokoban</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271170">
+            <blockquote>
+<pre>引用Chris的发言：</pre>
+
+<p></p>
+
+<p>应该不是的吧，最坏情况下也是o(m+n)的，而遍历是o(m*n)</p>
+
+<p><br>
+</p></blockquote>
+
+<p>你说得对。</p>
+
+<p>但是最坏的个例的确可能一样。如在AAAAAAAAAAAAAAAAAAAAAAAAAA里面找AB</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271170"><abbr class="published" title="2013-05-01T22:04:05+08:00">2013年5月 1日 22:04</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/sokoban.html" title="sokoban的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用sokoban的这条留言" onclick="return CommentQuote(&#39;comment-quote-271170&#39;,&#39;sokoban&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271171" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://sokoban.ws" href="http://sokoban.ws/" target="_blank" rel="nofollow">sokoban</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271171">
+            <blockquote>
+<pre>引用sokoban的发言：</pre>
+
+<p></p>
+
+<p>你说得对。</p>
+
+<p>但是最坏的个例的确可能一样。如在AAAAAAAAAAAAAAAAAAAAAAAAAA里面找AB</p>
+
+</blockquote>
+
+<p>我还是错的。KMP的确似乎任何时候都要快一些。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271171"><abbr class="published" title="2013-05-01T22:06:31+08:00">2013年5月 1日 22:06</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/sokoban.html" title="sokoban的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用sokoban的这条留言" onclick="return CommentQuote(&#39;comment-quote-271171&#39;,&#39;sokoban&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271172" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://sokoban.ws" href="http://sokoban.ws/" target="_blank" rel="nofollow">sokoban</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271172">
+            <p>极端例子：在AAAAAAAAAAAAAAAAAAAAAAAA里面找BB。 </p>
+
+<p>这个例子总算对了吧?</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271172"><abbr class="published" title="2013-05-01T22:09:15+08:00">2013年5月 1日 22:09</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/sokoban.html" title="sokoban的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用sokoban的这条留言" onclick="return CommentQuote(&#39;comment-quote-271172&#39;,&#39;sokoban&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271173" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://sokoban.ws" href="http://sokoban.ws/" target="_blank" rel="nofollow">sokoban</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271173">
+            <blockquote>
+<pre>引用RedNax的发言：</pre>
+
+<p>我一直以为KMP是string search最优的算法（时间复杂度是O(n+k)）,直到我知道了Boyer–Moore算法……才发现原来还有更加巧妙的方法……</p>
+
+</blockquote>
+
+<p>搜索了一下，Boyer–Moore算法每次从要找的Pattern末尾开始比较，并且一般用两条规则来控制移位（KMP只有一条移位规则），比KMP还好。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271173"><abbr class="published" title="2013-05-01T22:14:46+08:00">2013年5月 1日 22:14</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/sokoban.html" title="sokoban的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用sokoban的这条留言" onclick="return CommentQuote(&#39;comment-quote-271173&#39;,&#39;sokoban&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271182" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">ballcat</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271182">
+            <blockquote>
+<pre>引用sokoban的发言：</pre>
+
+<p>极端例子：在AAAAAAAAAAAAAAAAAAAAAAAA里面找BB。 </p>
+
+<p>这个例子总算对了吧?</p>
+
+</blockquote>
+
+<p>不会<br>
+尝试匹配第一个，发现是A，所以要滑移。BB里面根本没有A，所以会滑移一个位置。</p>
+
+<p>这是一个经典的势能分析例子。原串的指针只会往后移，目标串的指针只在原串指针往后移时往后移相同的步数，显然目标串指针往前移的步数不会多于往后移的步数。所以加起来所有指针移动的步数不会超过三倍的原串长度。</p>
+
+<p>后缀匹配的平均时间可以是亚线性因为可以根据目标串的特点忽略掉原串的某些部分。但是最坏情况下还是线性的……<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271182"><abbr class="published" title="2013-05-01T23:15:38+08:00">2013年5月 1日 23:15</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/ballcat.html" title="ballcat的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用ballcat的这条留言" onclick="return CommentQuote(&#39;comment-quote-271182&#39;,&#39;ballcat&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271184" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zt</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271184">
+            <p>看《算法导论》的图32-10，就比较好理解了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271184"><abbr class="published" title="2013-05-01T23:16:43+08:00">2013年5月 1日 23:16</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/zt.html" title="zt的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用zt的这条留言" onclick="return CommentQuote(&#39;comment-quote-271184&#39;,&#39;zt&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271195" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">kanaz</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271195">
+            <p>最简单解释就是把搜索词自相关一下</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271195"><abbr class="published" title="2013-05-02T01:04:45+08:00">2013年5月 2日 01:04</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/kanaz.html" title="kanaz的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用kanaz的这条留言" onclick="return CommentQuote(&#39;comment-quote-271195&#39;,&#39;kanaz&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271206" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Henry</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271206">
+            <blockquote>
+<pre>引用kanaz的发言：</pre>
+
+<p>最简单解释就是把搜索词自相关一下</p>
+
+</blockquote>
+能详细点么
+
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271206"><abbr class="published" title="2013-05-02T08:59:27+08:00">2013年5月 2日 08:59</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Henry.html" title="Henry的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Henry的这条留言" onclick="return CommentQuote(&#39;comment-quote-271206&#39;,&#39;Henry&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271208" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">王大德</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271208">
+            <p>我以前也写了一篇博文,理解kmp,核心在于next数组.我认为不要拘泥于过程,而要用抓住其递归的本质,摘录一部分如下:</p>
+
+<p>理解next数组生成的算法花费了一些力气.该算法用了数学归纳法,读起来还有一些递归的意味.<br>
+    <br>
+    这里再复述一下,求next[i+1],就是看P[1,i]的最大子串(姑且叫这个吧),如果匹配好说,如果不匹配则继续看这个最大子串的最大子串,重复这个过程,直到算出结果.</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271208"><abbr class="published" title="2013-05-02T11:06:39+08:00">2013年5月 2日 11:06</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E7%8E%8B%E5%A4%A7%E5%BE%B7.html" title="王大德的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用王大德的这条留言" onclick="return CommentQuote(&#39;comment-quote-271208&#39;,&#39;王大德&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271210" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.callmewind.info" href="http://www.callmewind.info/" target="_blank" rel="nofollow">rian</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271210">
+            <p>总结出了两种情况：<br>
+1：移动一位，如果搜索词第一个字符与目标字符串不匹配就移动一位，如果搜索词第一个字符与目标字符串匹配但是第二个字符与目标字符串不匹配也是移动一位（因为可以理解如果搜索词值匹配了第一个字符或者第一个字符都不匹配，那么展现不出特征无法推理搜索词移动一位是否是没有意义的，所以只能移动一位）<br>
+2：移动大于一位，如果搜索词第一个字符和第二个字符都与目标字符串匹配，那么就展现出了特征，可以推理，移动一位是没有意义的，所以可以尝试移动2位甚至更多<br>
+给博主一个建议：<br>
+觉得应该可以在部分匹配表再加一行移动位数的数据，以后直接查询移动位数就可以了，不要临时再算</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271210"><abbr class="published" title="2013-05-02T12:26:28+08:00">2013年5月 2日 12:26</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/rian.html" title="rian的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用rian的这条留言" onclick="return CommentQuote(&#39;comment-quote-271210&#39;,&#39;rian&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271224" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.vktone.com/" href="http://www.vktone.com/" target="_blank" rel="nofollow">V客小站</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271224">
+            <p>各位有没有在实际的项目中用过KMP算法呢？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271224"><abbr class="published" title="2013-05-02T22:18:01+08:00">2013年5月 2日 22:18</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/V%E5%AE%A2%E5%B0%8F%E7%AB%99.html" title="V客小站的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用V客小站的这条留言" onclick="return CommentQuote(&#39;comment-quote-271224&#39;,&#39;V客小站&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271246" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">pi1ot</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271246">
+            <blockquote>
+<pre>引用V客小站的发言：</pre>
+
+<p>各位有没有在实际的项目中用过KMP算法呢？</p>
+
+</blockquote>
+
+<p>没有，我遇到过的实际需求更多是对一段长本文进行词表匹配或者替换，词表本身很大，但是每个词条比较短，类似于editor keyword highlight场景</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271246"><abbr class="published" title="2013-05-03T15:52:46+08:00">2013年5月 3日 15:52</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/pi1ot.html" title="pi1ot的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用pi1ot的这条留言" onclick="return CommentQuote(&#39;comment-quote-271246&#39;,&#39;pi1ot&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271247" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">nklike</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271247">
+            <p>楼主的这个算法感觉和这里面的例子第二步不能够对应上去<br>
+<a href="http://www.cs.utexas.edu/~moore/best-ideas/string-searching/kpm-example.html#step02" rel="nofollow">http://www.cs.utexas.edu/~moore/best-ideas/string-searching/kpm-example.html#step02</a></p>
+
+<p>按理说<br>
+example的表应该是</p>
+
+<p>0000001</p>
+
+<p>ER和EX不匹配，按照楼主的说法应该是移动一位，但是例子里面直接移动了2位<br>
+应该是已经匹配的个数2减去EX对应的部分匹配值0，而不是1-0</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271247"><abbr class="published" title="2013-05-03T16:18:21+08:00">2013年5月 3日 16:18</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/nklike.html" title="nklike的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用nklike的这条留言" onclick="return CommentQuote(&#39;comment-quote-271247&#39;,&#39;nklike&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271257" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271257">
+            <p>@nklike：</p>
+
+<p>是跟他不一样。</p>
+
+<p>那里的理由是R不出现在EX里，所以可以移2位。我觉得那不是KMP算法，而是Boyer-Moore算法的“坏字符规则”。<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271257"><abbr class="published" title="2013-05-03T18:47:45+08:00">2013年5月 3日 18:47</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%98%AE%E4%B8%80%E5%B3%B0.html" title="阮一峰的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote(&#39;comment-quote-271257&#39;,&#39;阮一峰&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271263" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://biaobiaoqi.me" href="http://biaobiaoqi.me/" target="_blank" rel="nofollow">biaobiaoqi</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271263">
+            <p>最近时常从各个信息源获取到ruanyifeng的博客。小弟我也郑在自己学着积累思考，写博客。从博主这里学习了很多。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271263"><abbr class="published" title="2013-05-03T21:09:48+08:00">2013年5月 3日 21:09</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/biaobiaoqi.html" title="biaobiaoqi的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用biaobiaoqi的这条留言" onclick="return CommentQuote(&#39;comment-quote-271263&#39;,&#39;biaobiaoqi&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271277" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://hbprotoss.github.io" href="http://hbprotoss.github.io/" target="_blank" rel="nofollow">hbprotoss</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271277">
+            <p>感谢LZ，这篇文章确实比较容易理解</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271277"><abbr class="published" title="2013-05-04T09:04:25+08:00">2013年5月 4日 09:04</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/hbprotoss.html" title="hbprotoss的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用hbprotoss的这条留言" onclick="return CommentQuote(&#39;comment-quote-271277&#39;,&#39;hbprotoss&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271278" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">周浩楠</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271278">
+            <p>有醍醐灌顶的感觉。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271278"><abbr class="published" title="2013-05-04T09:44:32+08:00">2013年5月 4日 09:44</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E5%91%A8%E6%B5%A9%E6%A5%A0.html" title="周浩楠的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用周浩楠的这条留言" onclick="return CommentQuote(&#39;comment-quote-271278&#39;,&#39;周浩楠&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271281" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">longsail</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271281">
+            <p>部分匹配值"就是"前缀"和"后缀"的最长的共有元素的长度，这里以AACDAA为例，</p>
+
+<p>"AACDAA"的前缀为[A, AA, AAC, AACD, AACDA]，后缀为[A,AA,DAA,CDAA,ACDAA]，共有元素为"A","AA"，这时取最长字符串的长度？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271281"><abbr class="published" title="2013-05-04T10:07:47+08:00">2013年5月 4日 10:07</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/longsail.html" title="longsail的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用longsail的这条留言" onclick="return CommentQuote(&#39;comment-quote-271281&#39;,&#39;longsail&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271284" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Melo618</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271284">
+            <p>移动位数 = 已匹配的字符数 - 最后一个匹配字符对应的部分匹配值<br>
+这样更准确</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271284"><abbr class="published" title="2013-05-04T12:03:30+08:00">2013年5月 4日 12:03</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Melo618.html" title="Melo618的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Melo618的这条留言" onclick="return CommentQuote(&#39;comment-quote-271284&#39;,&#39;Melo618&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271285" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271285">
+            <p>@longsail:</p>
+
+<p>最长字符串的长度是2。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271285"><abbr class="published" title="2013-05-04T12:14:31+08:00">2013年5月 4日 12:14</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%98%AE%E4%B8%80%E5%B3%B0.html" title="阮一峰的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote(&#39;comment-quote-271285&#39;,&#39;阮一峰&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271330" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">YangZhixuan</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271330">
+            <p>初学KMP的时候，一直不得要领。后来学习AC自动机的时候，一下子明白了KMP实际上是AC自动机的特殊情况。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271330"><abbr class="published" title="2013-05-06T16:37:21+08:00">2013年5月 6日 16:37</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/YangZhixuan.html" title="YangZhixuan的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用YangZhixuan的这条留言" onclick="return CommentQuote(&#39;comment-quote-271330&#39;,&#39;YangZhixuan&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271350" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Daniel</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271350">
+            <p>难道是我的错觉，第12步：</p>
+
+<p>12.</p>
+
+<p>逐位比较，直到发现C与D不匹配。于是，移动位数 = 6 - 2，继续将搜索词向后移动4位。</p>
+
+<p>但是<br>
+搜索词      A  B  C  D  A  B  D<br>
+部分匹配值   0  0  0  0  1  2  0</p>
+
+<p>移动位数 = 已匹配的字符数 - 对应的部分匹配值</p>
+
+<p>难道不是应该 移动位数 = 6 - 0 吗？ 最后一个D的匹配值是0啊。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271350"><abbr class="published" title="2013-05-07T09:27:03+08:00">2013年5月 7日 09:27</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Daniel.html" title="Daniel的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Daniel的这条留言" onclick="return CommentQuote(&#39;comment-quote-271350&#39;,&#39;Daniel&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271351" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Daniel</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271351">
+            <p>Sorry, 我没有看到第16步。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271351"><abbr class="published" title="2013-05-07T09:32:43+08:00">2013年5月 7日 09:32</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Daniel.html" title="Daniel的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Daniel的这条留言" onclick="return CommentQuote(&#39;comment-quote-271351&#39;,&#39;Daniel&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271353" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Daniel</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271353">
+            <p>Sorry, 看东西一直囫囵吞枣，仔细的看了几遍，又码了下代码，终于完全明白了。非常感谢。抱歉前面两次的留言。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271353"><abbr class="published" title="2013-05-07T10:40:31+08:00">2013年5月 7日 10:40</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Daniel.html" title="Daniel的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Daniel的这条留言" onclick="return CommentQuote(&#39;comment-quote-271353&#39;,&#39;Daniel&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271386" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://50vip.com/blog.php?i=228" href="http://50vip.com/blog.php?i=228" target="_blank" rel="nofollow">红色石头</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271386">
+            <p>非常不错，简介易懂，我转载了，并评价为：图文并茂，生动形象易懂。<br>
+<a href="http://50vip.com/blog.php?i=228" rel="nofollow">http://50vip.com/blog.php?i=228</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271386"><abbr class="published" title="2013-05-09T15:03:43+08:00">2013年5月 9日 15:03</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E7%BA%A2%E8%89%B2%E7%9F%B3%E5%A4%B4.html" title="红色石头的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用红色石头的这条留言" onclick="return CommentQuote(&#39;comment-quote-271386&#39;,&#39;红色石头&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271418" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">callmestring</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271418">
+            <p>算法的关键在于next数组的生成,用动态规范法生成。<br>
+比如：str = abcabd，next初始化为：[0,0,0,0,0,0];<br>
+已知第0个字符a没有任何相同的前后缀，则next[0] = 0。<br>
+加入第1个字符，则前面已知的最长公共前后缀长度为next[0]，此时如果str[next[0]]与str[1]相等，就可知道next[1]=next[0]+1，如不相等则可直接判定next[1]=0；这里str[next[0]]!=str[1]，故next[1]=0。<br>
+...，next[2]=0。<br>
+...，next[3]=next[2]+1=1。<br>
+...，next[4]=next[3]+1=2。<br>
+...，next[5]=0。<br>
+最后，next=[0,0,0,1,2,0];</p>
+
+<p>不知道KMP里面是否是这样生成的？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271418"><abbr class="published" title="2013-05-10T21:30:18+08:00">2013年5月10日 21:30</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/callmestring.html" title="callmestring的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用callmestring的这条留言" onclick="return CommentQuote(&#39;comment-quote-271418&#39;,&#39;callmestring&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271452" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://bibodeng.web-149.com" href="http://bibodeng.web-149.com/" target="_blank" rel="nofollow">bibodeng</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271452">
+            <p>能把复杂的东西讲清楚，说明真的理解透彻了。看了这篇真的清晰很多，之前看《算法导论》，觉得看过就行了，其实是很多不懂，后来又忘了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271452"><abbr class="published" title="2013-05-11T21:22:29+08:00">2013年5月11日 21:22</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/bibodeng.html" title="bibodeng的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用bibodeng的这条留言" onclick="return CommentQuote(&#39;comment-quote-271452&#39;,&#39;bibodeng&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271468" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Raw</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271468">
+            <p>kmp算法主要是失效函数的这个表如何计算，其实质就是一个变形的状态机，用典型的数学归纳法来计算此表，有一个初始状态f(1)=0，然后迭代出所有位置上的失效值。<br>
+这里只说清楚了如何用失效函数来解决字符串匹配问题，但并没有给出如何计算失效函数的方法。</p>
+
+<p>另外kmp算法对字母类语言理论效率比价高，但是对汉语这种没有太多前缀字串和后缀字串重合的语言，其实效率和最普通的匹配没太大差别。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271468"><abbr class="published" title="2013-05-12T11:10:42+08:00">2013年5月12日 11:10</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Raw.html" title="Raw的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Raw的这条留言" onclick="return CommentQuote(&#39;comment-quote-271468&#39;,&#39;Raw&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271514" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">starshine</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271514">
+            <p>省略了非常重要的一个问题，<br>
+就是部分匹配表的算法问题，如何得到？<br>
+只是给出原理是不够的。<br>
+另外，对于kmp算法正确性的解释，明显不够。<br>
+如果真心研究这个问题，还是需要去看看更想尽的解释，不要怕麻烦和困难。<br>
+看这个，只能了解表象。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271514"><abbr class="published" title="2013-05-14T11:34:09+08:00">2013年5月14日 11:34</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/starshine.html" title="starshine的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用starshine的这条留言" onclick="return CommentQuote(&#39;comment-quote-271514&#39;,&#39;starshine&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271515" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">starshine</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271515">
+            <p>@callmestring：</p>
+
+<p>这个解释貌似不错。看next函数的生成代码，非常简洁，但是理解起来相当的不容易，不明白其推导过程。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271515"><abbr class="published" title="2013-05-14T11:38:40+08:00">2013年5月14日 11:38</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/starshine.html" title="starshine的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用starshine的这条留言" onclick="return CommentQuote(&#39;comment-quote-271515&#39;,&#39;starshine&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271586" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">吹风</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271586">
+            <p>如果是比较中文字符串怎么做呢？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271586"><abbr class="published" title="2013-05-17T17:32:09+08:00">2013年5月17日 17:32</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E5%90%B9%E9%A3%8E.html" title="吹风的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用吹风的这条留言" onclick="return CommentQuote(&#39;comment-quote-271586&#39;,&#39;吹风&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271597" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">radix</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271597">
+            <p>@callmestring：</p>
+
+<p>对于 str=[A,C,A,A]的str[3]就不正确了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271597"><abbr class="published" title="2013-05-18T16:34:08+08:00">2013年5月18日 16:34</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/radix.html" title="radix的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用radix的这条留言" onclick="return CommentQuote(&#39;comment-quote-271597&#39;,&#39;radix&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271736" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">tom</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271736">
+            <blockquote>
+<pre>引用Mr.king的发言：</pre>
+
+<p>Robert Sedgewick <a href="https://class.coursera.org/algs4partII-001/lecture/40" rel="nofollow">https://class.coursera.org/algs4partII-001/lecture/40</a> 用自动机解释kmp，感觉更妙，就是实现的时候空间复杂度高点。个人感觉Sedgewick这个老头讲东西确实牛逼，很多看书很难理解的算法，他一讲就明白了，有兴趣的可以去part1看看他讲的红黑树，特别牛逼。</p>
+
+</blockquote>
+
+<p>Robert Sedgewick 这个实际上是string-matching automaton，需要预算这个pattern的整个字符集的自动机，个人感觉并不是kmp。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271736"><abbr class="published" title="2013-05-25T09:21:57+08:00">2013年5月25日 09:21</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/tom.html" title="tom的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用tom的这条留言" onclick="return CommentQuote(&#39;comment-quote-271736&#39;,&#39;tom&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271746" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">于梓峤</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271746">
+            <p>部分匹配值的概念为什么要提出来？为什么又要这么定义？抱歉看不大懂，不过对于KMP算法大概是明白了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271746"><abbr class="published" title="2013-05-26T10:51:57+08:00">2013年5月26日 10:51</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E4%BA%8E%E6%A2%93%E5%B3%A4.html" title="于梓峤的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用于梓峤的这条留言" onclick="return CommentQuote(&#39;comment-quote-271746&#39;,&#39;于梓峤&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-271841" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">DOVE</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-271841">
+            <blockquote>
+<pre>引用radix的发言：</pre>
+
+<p>@callmestring：</p>
+
+<p>对于 str=[A,C,A,A]的str[3]就不正确了。</p>
+
+</blockquote>
+
+<p>就是，str = “acaa”,照这样算，在next[3]就不对了！！！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-271841"><abbr class="published" title="2013-05-30T22:40:53+08:00">2013年5月30日 22:40</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/DOVE.html" title="DOVE的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用DOVE的这条留言" onclick="return CommentQuote(&#39;comment-quote-271841&#39;,&#39;DOVE&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272293" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">xxx</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272293">
+            <p>next值求得不对</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272293"><abbr class="published" title="2013-06-24T10:58:32+08:00">2013年6月24日 10:58</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/xxx.html" title="xxx的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用xxx的这条留言" onclick="return CommentQuote(&#39;comment-quote-272293&#39;,&#39;xxx&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272395" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">xiaolong</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272395">
+            <p>解释的太清晰了，谢谢啦</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272395"><abbr class="published" title="2013-06-29T21:24:54+08:00">2013年6月29日 21:24</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/xiaolong.html" title="xiaolong的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用xiaolong的这条留言" onclick="return CommentQuote(&#39;comment-quote-272395&#39;,&#39;xiaolong&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272459" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">acmerfight</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272459">
+            <p>按照你的做法<br>
+ababb 的next数组是什么呢？不对吧</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272459"><abbr class="published" title="2013-07-02T10:59:36+08:00">2013年7月 2日 10:59</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/acmerfight.html" title="acmerfight的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用acmerfight的这条留言" onclick="return CommentQuote(&#39;comment-quote-272459&#39;,&#39;acmerfight&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272786" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://无" href="http://xn--rgv/" target="_blank" rel="nofollow">J</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272786">
+            <p>做OJ题目的时候恰好用到，现在终于懂了KMP是怎么回事了~^ ^</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272786"><abbr class="published" title="2013-07-22T16:04:12+08:00">2013年7月22日 16:04</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/J.html" title="J的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用J的这条留言" onclick="return CommentQuote(&#39;comment-quote-272786&#39;,&#39;J&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272899" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">刘玉</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272899">
+            <p>为什么按照算法导论上的例子“ababababca”，再通过移动位数的公式得不到书上的那个数组呢？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272899"><abbr class="published" title="2013-07-31T21:17:16+08:00">2013年7月31日 21:17</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E5%88%98%E7%8E%89.html" title="刘玉的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用刘玉的这条留言" onclick="return CommentQuote(&#39;comment-quote-272899&#39;,&#39;刘玉&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-272989" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">楚轩</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-272989">
+            <p>感谢您的文章，真的写的很好，3Q！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-272989"><abbr class="published" title="2013-08-10T15:00:41+08:00">2013年8月10日 15:00</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E6%A5%9A%E8%BD%A9.html" title="楚轩的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用楚轩的这条留言" onclick="return CommentQuote(&#39;comment-quote-272989&#39;,&#39;楚轩&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-273014" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://serika00.info/" href="http://serika00.info/" target="_blank" rel="nofollow">serika00</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-273014">
+            <p>看的第三篇关于KMP的，直接懂了，写得比其它两篇简单多了。<br>
+其实那两篇根本没认真看完，太长了，感觉对于有点计算机基础的人来说，KMP也不是一个需要那么多文字来描述的算法。<br>
+喜欢博主这种简单易懂的说明方式。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-273014"><abbr class="published" title="2013-08-12T10:27:48+08:00">2013年8月12日 10:27</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/serika00.html" title="serika00的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用serika00的这条留言" onclick="return CommentQuote(&#39;comment-quote-273014&#39;,&#39;serika00&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-273203" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">郭春阳</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-273203">
+            <blockquote>
+<pre>引用test的发言：</pre>
+
+<p>有时候，字符串内部会有重复。比如，"ABCDAB"之中有两个"AB"，那么它的"部分匹配值"就是2（"AB"的长度）<br>
+这个应该说是，字符串头部和尾部有重复？<br>
+如果是ABCABD这样即使有两个AB也不能部分移动吧</p>
+
+</blockquote>
+
+<p>如果你匹配结束时，此时匹配的是ABCAB，此时查表肯定是2啊。<br>
+你仔细理解下后缀。后缀不是整个字符串的后缀，而是已经匹配部分的后缀。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-273203"><abbr class="published" title="2013-08-23T00:49:47+08:00">2013年8月23日 00:49</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%83%AD%E6%98%A5%E9%98%B3.html" title="郭春阳的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用郭春阳的这条留言" onclick="return CommentQuote(&#39;comment-quote-273203&#39;,&#39;郭春阳&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-273204" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">郭春阳</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-273204">
+            <p>最喜欢的博主的文章，通俗易懂，这才是真正的为人民服务。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-273204"><abbr class="published" title="2013-08-23T00:51:00+08:00">2013年8月23日 00:51</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E9%83%AD%E6%98%A5%E9%98%B3.html" title="郭春阳的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用郭春阳的这条留言" onclick="return CommentQuote(&#39;comment-quote-273204&#39;,&#39;郭春阳&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-273242" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">花开献佛堂</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-273242">
+            <p>解释的不错，终于看懂了，谢谢</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-273242"><abbr class="published" title="2013-08-25T19:26:25+08:00">2013年8月25日 19:26</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E8%8A%B1%E5%BC%80%E7%8C%AE%E4%BD%9B%E5%A0%82.html" title="花开献佛堂的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用花开献佛堂的这条留言" onclick="return CommentQuote(&#39;comment-quote-273242&#39;,&#39;花开献佛堂&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-273614" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://weibo.com/lazycatdongdong/" href="http://weibo.com/lazycatdongdong/" target="_blank" rel="nofollow">奔跑的猫</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-273614">
+            <p>部分匹配值都算出来了 为什么不算出移动值表呢</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-273614"><abbr class="published" title="2013-09-05T14:07:44+08:00">2013年9月 5日 14:07</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E5%A5%94%E8%B7%91%E7%9A%84%E7%8C%AB.html" title="奔跑的猫的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用奔跑的猫的这条留言" onclick="return CommentQuote(&#39;comment-quote-273614&#39;,&#39;奔跑的猫&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-274723" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">ZYY</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-274723">
+            <p>真的很清楚易懂啊，谢谢整理</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-274723"><abbr class="published" title="2013-09-18T15:42:55+08:00">2013年9月18日 15:42</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/ZYY.html" title="ZYY的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用ZYY的这条留言" onclick="return CommentQuote(&#39;comment-quote-274723&#39;,&#39;ZYY&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-280056" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">gsj</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-280056">
+            <p>我在网上看了好多，都不怎么懂，看了这个，恍然大悟。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-280056"><abbr class="published" title="2013-10-24T19:30:01+08:00">2013年10月24日 19:30</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/gsj.html" title="gsj的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用gsj的这条留言" onclick="return CommentQuote(&#39;comment-quote-280056&#39;,&#39;gsj&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-287079" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">charmingcui</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-287079">
+            <p>之前看了很多博客都不理解，看了楼主的解释忽然间恍然大悟，谢谢楼主！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-287079"><abbr class="published" title="2013-11-18T15:52:55+08:00">2013年11月18日 15:52</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/charmingcui.html" title="charmingcui的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用charmingcui的这条留言" onclick="return CommentQuote(&#39;comment-quote-287079&#39;,&#39;charmingcui&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-289295" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://none" href="http://none/" target="_blank" rel="nofollow">needle</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-289295">
+            <p>大神, <br>
+我刚学三天的python.<br>
+碰巧看到了你的文章后,<br>
+我用三个多小时写出KMP啦!<br>
+会不会很蠢....<br>
+origin_str's length is: 23 match_pattern_str'length is: 7<br>
+------------origin_Str_index is: 0<br>
+------------origin_Str_index is: 1<br>
+------------origin_Str_index is: 2<br>
+------------origin_Str_index is: 3<br>
+------------origin_Str_index is: 4<br>
+length_matched is: 1<br>
+length_matched is: 2<br>
+length_matched is: 3<br>
+length_matched is: 4<br>
+length_matched is: 5<br>
+length_matched is: 6<br>
+now, pointer skips 4 index according to KMP<br>
+------------origin_Str_index is: 8<br>
+length_matched is: 1<br>
+length_matched is: 2<br>
+now, pointer skips 2 index according to KMP<br>
+------------origin_Str_index is: 10<br>
+------------origin_Str_index is: 11<br>
+length_matched is: 1<br>
+length_matched is: 2<br>
+length_matched is: 3<br>
+length_matched is: 4<br>
+length_matched is: 5<br>
+length_matched is: 6<br>
+now, pointer skips 4 index according to KMP<br>
+------------origin_Str_index is: 15<br>
+length_matched is: 1<br>
+length_matched is: 2<br>
+length_matched is: 3<br>
+length_matched is: 4<br>
+length_matched is: 5<br>
+length_matched is: 6<br>
+length_matched is: 7<br>
+position is at: 15<br>
+True</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-289295"><abbr class="published" title="2013-11-27T00:41:10+08:00">2013年11月27日 00:41</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/needle.html" title="needle的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用needle的这条留言" onclick="return CommentQuote(&#39;comment-quote-289295&#39;,&#39;needle&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-294834" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">KG</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-294834">
+            <p>很有用，必须要留言，顶楼主！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-294834"><abbr class="published" title="2013-12-27T15:20:19+08:00">2013年12月27日 15:20</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/KG.html" title="KG的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用KG的这条留言" onclick="return CommentQuote(&#39;comment-quote-294834&#39;,&#39;KG&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-297942" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">HZ</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-297942">
+            <p>非常好的文章，受益匪浅。请教一下：作者那个图是怎么画出来的？我指的是图1到16，尤其是上下对齐的红虚线框。谢谢。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-297942"><abbr class="published" title="2014-01-16T08:58:40+08:00">2014年1月16日 08:58</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/HZ.html" title="HZ的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用HZ的这条留言" onclick="return CommentQuote(&#39;comment-quote-297942&#39;,&#39;HZ&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-298712" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zhenxing1114</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-298712">
+            <blockquote>
+<pre>引用HZ的发言：</pre>
+
+<p>非常好的文章，受益匪浅。请教一下：作者那个图是怎么画出来的？我指的是图1到16，尤其是上下对齐的红虚线框。谢谢。</p>
+
+</blockquote>
+
+<p>可以在ppt、word里写好，然后截图吧，^_^</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-298712"><abbr class="published" title="2014-01-22T22:59:08+08:00">2014年1月22日 22:59</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/zhenxing1114.html" title="zhenxing1114的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用zhenxing1114的这条留言" onclick="return CommentQuote(&#39;comment-quote-298712&#39;,&#39;zhenxing1114&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-298713" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zhenxing1114</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-298713">
+            <p>这篇看上去好懂多了，回头再结合其他的文章仔细看看。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-298713"><abbr class="published" title="2014-01-22T23:01:24+08:00">2014年1月22日 23:01</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/zhenxing1114.html" title="zhenxing1114的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用zhenxing1114的这条留言" onclick="return CommentQuote(&#39;comment-quote-298713&#39;,&#39;zhenxing1114&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-300902" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">好人</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-300902">
+            <p>有空的话把next数组的算法也讲讲吧</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-300902"><abbr class="published" title="2014-02-24T14:49:27+08:00">2014年2月24日 14:49</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E5%A5%BD%E4%BA%BA.html" title="好人的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用好人的这条留言" onclick="return CommentQuote(&#39;comment-quote-300902&#39;,&#39;好人&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-303479" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.scolarart.com" href="http://www.scolarart.com/" target="_blank" rel="nofollow">JackieZhu</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-303479">
+            <blockquote>
+<pre>引用pi1ot的发言：</pre>
+
+<p>那就是说需要搜索的词如果内部完全没有重复，那这个算法就退化成了遍历？</p>
+
+</blockquote>
+
+<p>完全没有重复也是O(n)的啊</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-303479"><abbr class="published" title="2014-03-17T23:19:45+08:00">2014年3月17日 23:19</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/JackieZhu.html" title="JackieZhu的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用JackieZhu的这条留言" onclick="return CommentQuote(&#39;comment-quote-303479&#39;,&#39;JackieZhu&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-305233" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">轻抚麦浪</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-305233">
+            <p>寥寥数语，便将KMP算法的精髓尽数勾勒了出来，很好!</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-305233"><abbr class="published" title="2014-03-28T17:10:56+08:00">2014年3月28日 17:10</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/%E8%BD%BB%E6%8A%9A%E9%BA%A6%E6%B5%AA.html" title="轻抚麦浪的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用轻抚麦浪的这条留言" onclick="return CommentQuote(&#39;comment-quote-305233&#39;,&#39;轻抚麦浪&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-305738" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.cnblogs.com/kaituorensheng/" href="http://www.cnblogs.com/kaituorensheng/" target="_blank" rel="nofollow">jihite</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-305738">
+            <p>我用c++实现了下，这里贴不开，去我的博客看吧。<br>
+<a href="http://www.cnblogs.com/kaituorensheng/p/3633700.html" rel="nofollow">http://www.cnblogs.com/kaituorensheng/p/3633700.html</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-305738"><abbr class="published" title="2014-03-30T12:13:09+08:00">2014年3月30日 12:13</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/jihite.html" title="jihite的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用jihite的这条留言" onclick="return CommentQuote(&#39;comment-quote-305738&#39;,&#39;jihite&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-307389" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">vivi单</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-307389">
+            <p>昨天开始研究这个算法一直不得要领，直到看到这篇博文。不能更赞。接下来结合其他书籍和相关资料深入理解，然后码码代码。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-307389"><abbr class="published" title="2014-04-03T16:15:08+08:00">2014年4月 3日 16:15</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/vivi%E5%8D%95.html" title="vivi单的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用vivi单的这条留言" onclick="return CommentQuote(&#39;comment-quote-307389&#39;,&#39;vivi单&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-316315" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://wuzhiwei.net" href="http://wuzhiwei.net/" target="_blank" rel="nofollow">Tim</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-316315">
+            <p>一峰的解释从来都是简明直白，能把复杂的东西清晰简洁的表述出来，而且还方便记忆。<br>
+KMP算法的前缀后缀的匹配理论真是优美。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-316315"><abbr class="published" title="2014-04-20T22:05:34+08:00">2014年4月20日 22:05</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Tim.html" title="Tim的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Tim的这条留言" onclick="return CommentQuote(&#39;comment-quote-316315&#39;,&#39;Tim&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-323271" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">woiavril</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-323271">
+            <blockquote>
+<pre>引用test的发言：</pre>
+
+<p>有时候，字符串内部会有重复。比如，"ABCDAB"之中有两个"AB"，那么它的"部分匹配值"就是2（"AB"的长度）<br>
+这个应该说是，字符串头部和尾部有重复？<br>
+如果是ABCABD这样即使有两个AB也不能部分移动吧</p>
+
+</blockquote>
+
+<p>你确定你说的对，按博主的理解是前缀是除字符串最后一个字符的所有组合，而后缀是除最前面一个字符的所有组合，如果是ABCABD,前缀的组合有{ABCAB,ABCA,ABC,AB,A},后缀有{BCABD,CABD,ABD,BD},这两个集合根本没有重复的，所有他的部分匹配值为0；</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-323271"><abbr class="published" title="2014-05-14T13:27:17+08:00">2014年5月14日 13:27</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/woiavril.html" title="woiavril的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用woiavril的这条留言" onclick="return CommentQuote(&#39;comment-quote-323271&#39;,&#39;woiavril&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-323724" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zuoxinyu</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-323724">
+            <p>正在练习最简单的遍历匹配，直觉还有更高效的算法，这个虽然看不大懂，但是给了很大启发。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-323724"><abbr class="published" title="2014-05-16T22:03:46+08:00">2014年5月16日 22:03</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/zuoxinyu.html" title="zuoxinyu的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用zuoxinyu的这条留言" onclick="return CommentQuote(&#39;comment-quote-323724&#39;,&#39;zuoxinyu&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-324557" class="comment">
+    <div id="comment-last" class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Zhenghui</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-324557">
+            <p>博主太nb了！KMP从头看下来，几分钟，就看懂了！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-324557"><abbr class="published" title="2014-05-22T03:15:18+08:00">2014年5月22日 03:15</abbr></a>
+ | <a href="http://www.ruanyifeng.com/blog/user/Zhenghui.html" title="Zhenghui的全部留言">档案</a> 
+ | <a href="http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html#comment-text" title="引用Zhenghui的这条留言" onclick="return CommentQuote(&#39;comment-quote-324557&#39;,&#39;Zhenghui&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    </div>
+        
+    
+
+
+    
+    
+    <div class="comments-open" id="comments-open">
+        <h2 class="comments-open-header">我要发表看法</h2>
+        <div class="comments-open-content">
+
+        
+            <div id="comment-greeting"></div>
+
+            <form method="post" action="http://www.ruanyifeng.com/cgi-bin/mtos/mt-comments.cgi" name="comments_form" id="comments-form" onsubmit="return pleaseWait();">
+                <input type="hidden" name="static" value="1">
+                <input type="hidden" name="entry_id" value="1775">
+                <input type="hidden" name="__lang" value="en">
+                <input type="hidden" name="parent_id" value="" id="comment-parent-id">
+                <input type="hidden" name="armor" value="1">
+                <input type="hidden" name="preview" value="">
+                <input type="hidden" name="sid" value="">
+                <div id="comments-open-data">
+            <div id="comments-open-text">
+                    <p><label for="comment-text">您的留言
+                    （HTML标签部分可用）</label></p>
+                    <p><textarea id="comment-text" name="text" rows="10" cols="50"></textarea></p>
+                </div>
+                    <div id="comment-form-name">
+                        <p><label for="comment-author">您的大名：</label></p>
+                        <p><input id="comment-author" name="author" size="30" value="">  <span class="hint"> «-必填</span></p>
+                    </div>
+                    <div id="comment-form-email">
+                        <p><label for="comment-email">电子邮件：</label></p>
+                        <p><input id="comment-email" name="email" size="30" value="">  <span class="hint"> «-必填，不公开</span></p>
+                    </div>
+                    <div id="comment-form-url">
+                        <p><label for="comment-url">个人网址：</label></p>
+                        <p><input id="comment-url" name="url" size="30" value="">  <span class="hint"> «-我信任你，不会填写广告链接</span></p>
+                    </div>
+                    <div id="comment-form-remember-me">
+                        <p>
+                        <label for="comment-bake-cookie">记住个人信息？</label><input type="checkbox" id="comment-bake-cookie" name="bakecookie" onclick="!this.checked?forgetMe(document.comments_form):rememberMe(document.comments_form)" value="1" accesskey="r"></p>
+                    </div>
+                </div>
+                    <div id="comment-form-reply" style="display:none">
+                    <input type="checkbox" id="comment-reply" name="comment_reply" value="" onclick="mtSetCommentParentID()">
+                    <label for="comment-reply" id="comment-reply-label"></label>
+                </div>
+                <div id="comments-open-captcha"></div>
+                <div id="comments-open-footer">
+<div id="wait" style="display:none;">
+<p><strong>正在发表您的评论，请稍候</strong></p>
+<p>
+<input type="text" name="percent" size="3" style="font-family:Arial; color:black;text-align:center; border-width:medium; border-style:none;">           
+<input type="text" name="chart" size="46" style="font-family:Arial;font-weight:bolder; color:black; padding:0px; border-style:none;">
+</p>
+</div>
+
+                    <p><input type="submit" accesskey="s" name="post" id="comment-submit" value="发表">  <span class="hint"> «- 点击按钮</span></p>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+
+    
+
+
+</div>
+
+
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        <script type="text/javascript" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/prism.js"></script>
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+<p><a href="http://www.ruanyifeng.com/contact.html">联系方式</a> | ruanyifeng.com 2003 - 2014
+<!--WEBBOT bot="Script" startspan PREVIEW="Site Meter" -->
+<script type="text/javascript" language="JavaScript">var site="sm3bomoocom"</script>
+<a target="_top" href="http://www.sitemeter.com/stats.asp?site=sm3bomoocom" id="idSiteMeterHREF"><img border="0" alt="Site Meter" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/meter.asp"></a><iframe frameborder="0" width="0" height="0" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/saved_resource.htm"></iframe><script type="text/javascript" language="JavaScript1.2" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/counter.js">
+</script>
+<noscript>
+&lt;a href="http://sm3.sitemeter.com/stats.asp?site=sm3bomoocom" target="_top"&gt;
+&lt;img src="http://sm3.sitemeter.com/meter.asp?site=sm3bomoocom" alt="Site Meter" border=0&gt;&lt;/a&gt;
+</noscript>
+<!-- Copyright (c)2002 Site Meter -->
+</p>
+
+        </div>
+    </div>
+</div>
+
+
+<div id="share_button_proto" style="display:none;"><a class="bshareDiv" href="http://www.bshare.cn/share" style="display: block; text-decoration: none; padding: 0px; margin: 0px; font-size: 12px; height: 21px; width: 51px;"><div class="bsPromo bsPromo1"></div><div class="buzzButton bsStyle10" style="height:21px;color:#333;;background:transparent url(http://static.bshare.cn/frame/images/button_custom10-zh-Orange.gif) no-repeat;text-align:center;width:51px;"></div><div style="clear:both;"></div></a><script type="text/javascript" charset="utf-8" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/buttonLite.js"></script>                                       
+<script type="text/javascript" charset="utf-8">
+bShare.addEntry({
+    title: document.getElementById("page-title").innerHTML,
+url:window.location.href
+});
+</script></div>
+<script>
+document.getElementById("share_button").innerHTML=document.getElementById("share_button_proto").innerHTML;
+</script>
+
+
+
+
+        </div>
+    </div><script type="application/javascript" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/analytics.js"></script>
+
+<iframe scrolling="no" width="2" height="2" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/log.htm" style="display: none;"></iframe><div style="height: 0px; line-height: 0; font-size: 0px;"><object id="bshareFS" type="application/x-shockwave-flash" data="http://static.bshare.cn/flash/bfc.swf" width="0" height="0"><param name="movie" value="http://static.bshare.cn/flash/bfc.swf"><param name="allowScriptAccess" value="always"><param name="allowNetworking" value="all"></object></div><div id="bsBox" class="bsBox"><div class="bsClose">X</div><div class="bsTop"><div class="bsReturn">选择其他平台 &gt;&gt;</div><span style="margin-left:15px;">分享到</span><span class="bsPlatName"></span></div><div class="bsFrameDiv"><iframe class="bShareFrame" name="bsFrame368" frameborder="0" scrolling="no" allowtransparency="true"></iframe></div><div id="bsMorePanel" style="display: none;"></div></div><div id="bsPanelHolder"><div id="bsPanel" style="display:none;"><div class="bsTitle"><a style="float:left;height:20px;line-height:20px;font-weight:bold;" class="bsSiteLink" target="_blank" href="http://www.bshare.cn/intro">分享到...</a><a class="bsSiteLink" style="cursor:pointer;float:right;height:20px;line-height:20px;font-weight:bold;" onclick="document.getElementById(&#39;bsPanel&#39;).style.display=&#39;none&#39;;">X</a><div class="bsClear"></div></div><div class="bsClear"></div><div style="padding-left:8px;background:#fff;*height:244px;"><div style="height:47px;border-bottom:1px #ccc solid;padding:4px 0 4px 16px;margin-right:8px;_padding-left:12px;"><div class="bsRlogo" onmouseover="javascript:this.className=&#39;bsRlogoSel&#39;" onmouseout="javascript:this.className=&#39;bsRlogo&#39;"><a href="javascript:;" onclick="javascript:bShare.share(event,&#39;facebook&#39;);return false;" style="text-decoration:none;line-height:120%;"><div style="cursor:pointer;width:24px;height:24px;margin:0 18px 2px;background:url(http://static.bshare.cn/frame/images//logos/m2/facebook.gif) no-repeat;"></div><div style="cursor:pointer;text-align:center;width:60px;height:16px !important;overflow:hidden;color:inherit;white-space:nowrap;line-height:120% !important;">Facebook</div></a></div><div class="bsRlogo" onmouseover="javascript:this.className=&#39;bsRlogoSel&#39;" onmouseout="javascript:this.className=&#39;bsRlogo&#39;"><a href="javascript:;" onclick="javascript:bShare.share(event,&#39;twitter&#39;);return false;" style="text-decoration:none;line-height:120%;"><div style="cursor:pointer;width:24px;height:24px;margin:0 18px 2px;background:url(http://static.bshare.cn/frame/images//logos/m2/twitter.gif) no-repeat;"></div><div style="cursor:pointer;text-align:center;width:60px;height:16px !important;overflow:hidden;color:inherit;white-space:nowrap;line-height:120% !important;">Twitter</div></a></div><div class="bsRlogo" onmouseover="javascript:this.className=&#39;bsRlogoSel&#39;" onmouseout="javascript:this.className=&#39;bsRlogo&#39;"><a href="javascript:;" onclick="javascript:bShare.share(event,&#39;sinaminiblog&#39;);return false;" style="text-decoration:none;line-height:120%;"><div style="cursor:pointer;width:24px;height:24px;margin:0 18px 2px;background:url(http://static.bshare.cn/frame/images//logos/m2/sinaminiblog.gif) no-repeat;"></div><div style="cursor:pointer;text-align:center;width:60px;height:16px !important;overflow:hidden;color:inherit;white-space:nowrap;line-height:120% !important;">新浪微博</div></a></div></div><div class="bsLogoLink"><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="Google+" onclick="javascript:bShare.share(event,&#39;gplus&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//logos/s4/gplus.png) no-repeat;">Google+</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="QQ空间" onclick="javascript:bShare.share(event,&#39;qzone&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1566px;">QQ空间</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="网易微博" onclick="javascript:bShare.share(event,&#39;neteasemb&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1332px;">网易微博</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="飞信" onclick="javascript:bShare.share(event,&#39;feixin&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -702px;">飞信</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="开心网" onclick="javascript:bShare.share(event,&#39;kaixin001&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1008px;">开心网</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="饭否" onclick="javascript:bShare.share(event,&#39;fanfou&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -666px;">饭否</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="雪球" onclick="javascript:bShare.share(event,&#39;xueqiu&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//logos/s4/xueqiu.png) no-repeat;">雪球</a></div></div><div class="bsLogoLink"><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="腾讯微博" onclick="javascript:bShare.share(event,&#39;qqmb&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1512px;">腾讯微博</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="搜狐微博" onclick="javascript:bShare.share(event,&#39;sohuminiblog&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1800px;">搜狐微博</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="豆瓣网" onclick="javascript:bShare.share(event,&#39;douban&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -540px;">豆瓣网</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="人人网" onclick="javascript:bShare.share(event,&#39;renren&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -1674px;">人人网</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="QQ好友" onclick="javascript:bShare.share(event,&#39;qqim&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//logos/s4/qqim.png) no-repeat;">QQ好友</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="Instapaper" onclick="javascript:bShare.share(event,&#39;instapaper&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -954px;">Instapaper</a></div><div class="bsLogo" onmouseover="javascript:this.className=&#39;bsLogoSel&#39;" onmouseout="javascript:this.className=&#39;bsLogo&#39;"><a href="javascript:;" title="美味书签" onclick="javascript:bShare.share(event,&#39;delicious&#39;);return false;" style="background:url(http://static.bshare.cn/frame/images//slogos_sprite8.png) no-repeat 0 -432px;">美味书签</a></div></div><div class="bsClear"></div></div><div style="height:20px;line-height:20px;padding:0 8px;border-top:1px solid #e8e8e8;color:#666;background:#f2f2f2;"><div class="buzzButton" style="float:left;">更多平台... <font style="font-weight:normal;">(133)</font></div><div id="bsPower" style="float:right;text-align:right;overflow:hidden;height:100%;"><a class="bsSiteLink" style="font-size:10px;vertical-align:text-bottom;line-height:24px;cursor:pointer;" href="http://www.bshare.cn/" target="_blank"><span style="font-size:10px;vertical-align:text-bottom;"><span style="color:#f60;">b</span>Share</span></a></div></div></div></div></body><iframe frameborder="0" marginheight="0" marginwidth="0" scrolling="no" width="2" height="2" src="./字符串匹配的KMP算法 - 阮一峰的网络日志_files/log(1).htm" style="display: none;"></iframe></html>
