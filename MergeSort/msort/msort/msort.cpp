@@ -7,40 +7,41 @@ void merge(int a[], const int low, const int mid, const int high)
 {
 	// Variables declaration. 
 	int * b = new int[high-low+1];
-	int flag_at_low,flag_at_b,flag_at_mid,k;
-	flag_at_low=low;
-	flag_at_b=0;
-	flag_at_mid=mid+1;
+	int flag_array1half,b_idx,flag_array2half,k;
+	flag_array1half=low;
+	flag_array2half=mid+1;
+	b_idx=0;
+	
 	// Merges the two array's into b[] until the first one is finish
-	while((flag_at_low<=mid)&&(flag_at_mid<=high))
+	while((flag_array1half<=mid)&&(flag_array2half<=high))
 	{
-		if(a[flag_at_low]<=a[flag_at_mid])
+		if(a[flag_array1half]<=a[flag_array2half])
 		{
-			b[flag_at_b]=a[flag_at_low];
-			flag_at_low++;
+			b[b_idx]=a[flag_array1half];
+			flag_array1half++;
 		}
 		else
 		{
-			b[flag_at_b]=a[flag_at_mid];
-			flag_at_mid++;
+			b[b_idx]=a[flag_array2half];
+			flag_array2half++;
 		}
-		flag_at_b++;
+		b_idx++;
 	}
 	// Completes the array filling in it the missing values
-	if(flag_at_low>mid)
+	if(flag_array1half>mid)
 	{
-		for(k=flag_at_mid;k<=high;k++)
+		for(k=flag_array2half;k<=high;k++)
 		{
-			b[flag_at_b]=a[k];
-			flag_at_b++;
+			b[b_idx]=a[k];
+			b_idx++;
 		}
 	}
 	else
 	{
-		for(k=flag_at_low;k<=mid;k++)
+		for(k=flag_array1half;k<=mid;k++)
 		{
-			b[flag_at_b]=a[k];
-			flag_at_b++;
+			b[b_idx]=a[k];
+			b_idx++;
 		}
 	}
 	// Prints into the original array
