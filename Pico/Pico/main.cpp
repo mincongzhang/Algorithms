@@ -3,41 +3,28 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <complex>
+#include <algorithm>
+#include <valarray>
+#include <windows.h>
 
 using namespace std;
 
-template<class _T1,class _T2>
-struct my_pair
-{
-	_T1 first;
-	_T2 second;
+const double PI = 3.141592653589793238460;
 
-	//constructor 1
-	my_pair():first(),second(){};
+typedef unsigned int uint;
+typedef std::complex<double> Complex;
+typedef std::valarray<Complex> CArray;
 
-	//constructor 2
-	my_pair(const _T1 & __a,const _T2 & __b):first(__a),second(__b){};
+Complex cAbs(const Complex & num){
+	Complex result(sqrt(num.real()*num.real()+num.imag()*num.imag()),0.0);
+	return result;
+}
 
-	//constructor 3
-	template<class _U1,class _U2>
-	my_pair(const my_pair<_U1,_U2> & __p):first(__p.first),second(__p.second){};
-
-	//operator()
-	my_pair<_T1,_T2> operator()(const _T1 &__a,const _T2 & __b){
-		this->first = __a; this->second = __b; return *this;
-	};
-};
-
-my_pair<vector<double>,vector<double>> get_wave(string filename)
+void getWave(string filename,vector<double> & seconds,vector<Complex> & volts)
 {
 	//get csv file
 	ifstream fin(filename);		
-
-	//initial Seconds Volts
-	vector<double> seconds;
-	vector<double> volts;
-	seconds.reserve(20000);
-	volts.reserve(20000);
 
 	//traverse each line
 	string line;    
@@ -54,21 +41,96 @@ my_pair<vector<double>,vector<double>> get_wave(string filename)
 		stringstream sec_s(fields[0]);
 		stringstream vol_s(fields[1]);
 		double sec_d; sec_s>>sec_d;
-		double vol_d;vol_s>>vol_d;
+		double vol_d; vol_s>>vol_d;
+		Complex vod_c(vol_d,0.0);
 
 		seconds.push_back(sec_d);
-		volts.push_back(vol_d);
-		//cout <<"data accessed: "<<sec_d<< "," << vol_d << endl; 
+		volts.push_back(vod_c);
 	}
 
-	my_pair<vector<double>,vector<double>> signals(seconds,volts);
 	cout<<filename<<" get;"<<endl;
-	return signals;
+}
+
+inline uint myFloor(const uint data_length){
+	/*
+	get floor of the length with max power of 2
+	e.g. length==5000; n==12; 2^n = 4096
+	so that to avoid zero padding in FFT 
+	*/
+	uint n = 0;
+	while(data_length>>n) n++;	n--;
+	return uint(pow(2,n));
+}
+
+// Cooley¨CTukey FFT (in-place)
+void fft(CArray & x)
+{
+	const size_t N = x.size();
+	if (N <= 1) return;
+
+	// divide
+	CArray even = x[std::slice(0, N/2, 2)];
+	CArray  odd = x[std::slice(1, N/2, 2)];
+
+	// conquer
+	fft(even);
+	fft(odd);
+
+	// combine
+	for (size_t k = 0; k < N/2; ++k)
+	{
+		Complex t = std::polar(1.0, -2 * PI * k / N) * odd[k];
+		x[k    ] = even[k] + t;
+		x[k+N/2] = even[k] - t;
+	}
 }
 
 int main()
 {
-	my_pair<vector<double>,vector<double>> signals = get_wave("Wave000.csv");
+	//initial Seconds Volts
+	vector<double> seconds;
+	vector<Complex> volts;
+	seconds.reserve(20000);
+	volts.reserve(20000);
 
+	getWave("Wave000.csv",seconds,volts);
+
+	uint N = myFloor(seconds.size());
+	seconds.resize(N);
+	volts.resize(N);
+
+
+	Complex * volts_tmparray;
+	volts_tmparray = new Complex [N];
+
+	for(uint i=0;i<N;i++){
+		volts_tmparray[i] = volts[i];
+		//cout<<volts_tmparray[i]<<endl;
+	}
+
+	CArray freq(volts_tmparray, N);
+	delete [] volts_tmparray;
+
+	fft(freq);
+	//cout<<"FFT"<<endl;
+	//for(uint i=0;i<N;i++){
+	//	cout<<freq[i]<<endl;
+	//}
+
+	//get abs of freq
+	cout<<"abs"<<endl;
+	CArray abs_freq_tmp = freq.apply(cAbs);
+	vector<double> abs_freq;
+	abs_freq.reserve(N);
+
+	for(uint i=0;i<N;i++){
+		abs_freq.push_back(abs_freq_tmp[i].real());
+	}
+
+	cout<<"max"<<endl;
+	uint pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
+	cout<< pos <<" in "<<N<<endl;
+
+	Sleep(100000);
 	return 0;
 }
