@@ -9,34 +9,51 @@
 #include <complex>
 #include <algorithm>
 #include <valarray>
+
+#include <map>
+
 #include <windows.h>
 
 using namespace std;
 
-const double PI = 3.141592653589793238460;
-
 typedef unsigned int uint;
-typedef std::complex<double> Complex;
-typedef std::valarray<Complex> CArray;
+typedef complex<double> Complex;
+typedef valarray<Complex> CArray;
+typedef multimap<double,string> FMap;
+
+const double PI = 3.141592653589793238460;
 
 Complex cAbs(const Complex & num){
 	Complex result(sqrt(num.real()*num.real()+num.imag()*num.imag()),0.0);
 	return result;
 }
 
-void getWave(string filename,vector<double> & seconds,vector<Complex> & volts)
-{
+bool readData(string filename,vector<double> & seconds,vector<Complex> & volts){
 	//get csv file
-	ifstream fin(filename);		
+	ifstream input_file(filename);
+
+	//get data size	and reserve spaces
+	input_file.seekg(0, std::ios::end);
+	int estimate_filesize = (int)ceil(input_file.tellg()/25.0);
+	input_file.seekg(0);
+
+	if(estimate_filesize==0){
+		cout<<"Error: File is empty. Frequency is saved as 0"<<endl;
+		return false;
+	}
+
+	seconds.reserve(estimate_filesize);
+	volts.reserve(estimate_filesize);
 
 	//traverse each line
 	string line;    
-	while (getline(fin, line)) {
+	while (getline(input_file, line)) {
 		istringstream sin(line);    
 		vector<string> fields;    
 		string field;
 
 		while (getline(sin, field, ',')) {
+			cout<<field<<endl;
 			fields.push_back(field);    
 		}
 		if(fields[0]=="Seconds")  continue;	 //jump over the first line
@@ -52,6 +69,7 @@ void getWave(string filename,vector<double> & seconds,vector<Complex> & volts)
 	}
 
 	cout<<filename<<":"<<endl;
+	return true;
 }
 
 inline uint myFloor(const uint data_length){
@@ -65,9 +83,8 @@ inline uint myFloor(const uint data_length){
 	return uint(pow(2,n));
 }
 
-// Cooley¨CTukey FFT (in-place)
-void fft(CArray & x)
-{
+// Cooley¨CTukey FFT
+void myFft(CArray & x){
 	const size_t N = x.size();
 	if (N <= 1) return;
 
@@ -76,8 +93,8 @@ void fft(CArray & x)
 	CArray  odd = x[std::slice(1, N/2, 2)];
 
 	// conquer
-	fft(even);
-	fft(odd);
+	myFft(even);
+	myFft(odd);
 
 	// combine
 	for (size_t k = 0; k < N/2; ++k)
@@ -88,8 +105,7 @@ void fft(CArray & x)
 	}
 }
 
-double getMaxFreqPos(const vector<double> & seconds,const vector<Complex> & volts,uint N)
-{
+double getFreq(const vector<double> & seconds,const vector<Complex> & volts,uint N){
 	//get volts in CArray
 	Complex * volts_tmparray;
 	volts_tmparray = new Complex [N];
@@ -100,68 +116,94 @@ double getMaxFreqPos(const vector<double> & seconds,const vector<Complex> & volt
 	delete [] volts_tmparray;
 
 	//FFT
-	fft(freq);
+	myFft(freq);
 
 	//get absolute value of frequency
 	CArray abs_freq_tmp = freq.apply(cAbs);
+
+	//get position of max frequency
 	vector<double> abs_freq;
 	abs_freq.reserve(N);
-
-	//get position of max frequency 
-	for(uint i=0;i<N;i++) abs_freq.push_back(abs_freq_tmp[i].real()); 
+	for(uint i=0;i<N;i++){ 
+		abs_freq.push_back(abs_freq_tmp[i].real()); 
+	}
 	int pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
-	std::cout<<"Max freq position:";
-	std::cout<< pos <<" in "<<N<<endl;
 
 	//get max frequency
 	double max_t = seconds.at(N-1);
 	double Fs    = (N-1)/max_t;
 	double f_max = abs(double(pos) - double(N/2))*Fs/N;
-	cout<<"max freq:";
-	cout<<f_max<<endl;
 
+	cout<<"frequency:";	cout<<f_max<<endl;
 	return f_max;
 }
 
-void readAllFile()
-{
-	cout<<"reading..."<<endl;
-
-	ifstream inputFile;
-	WIN32_FIND_DATA FindData;
-	HANDLE hFind;
-	hFind = FindFirstFile("./*.csv", &FindData);
-	cout << FindData.cFileName << endl;
-
-	while (FindNextFile(hFind, &FindData))
-	{
-		cout << FindData.cFileName << endl;
-	}
-
-	inputFile.close();
-}
-
-int main()
-{
-	readAllFile();
-
+double getMaxFreqFromFile(string filename){
 	//initial Seconds Volts
 	vector<double> seconds;
 	vector<Complex> volts;
-	seconds.reserve(20000);
-	volts.reserve(20000);
 
-	getWave("Wave000.csv",seconds,volts);
+	//get seconds and volts
+	if(!readData(filename,seconds,volts) || volts.size()==0) 
+		return 0.0;
 
+	//resize
 	uint N = myFloor(seconds.size());
 	seconds.resize(N);
 	volts.resize(N);
 
-	/*get max freq*/
-	double freq = getMaxFreqPos(seconds,volts,N);
+	//get max frequency
+	double freq = getFreq(seconds,volts,N);
 
+	return freq;
+}
 
+void writeResult(const FMap & freq_map){
+	// open file
+	ofstream result_file;
+	result_file.open("results.csv");
 
-	Sleep(100000);
+	//write file header
+	if (result_file.is_open()){
+		cout<<"Writing results..."<<endl;
+
+		result_file<<"Filename,Frequency"<<endl;
+		for(FMap::const_iterator i=freq_map.begin();i!=freq_map.end();i++){
+			result_file<<i->second<<","<<i->first<<endl;
+		}
+	}
+	result_file.close();
+
+}
+
+int main()
+{
+	//check files in current directory 
+	WIN32_FIND_DATA FindData;
+	HANDLE hFind;
+	hFind = FindFirstFile("./Wave*.csv", &FindData);
+	if( hFind == INVALID_HANDLE_VALUE )
+	{
+		cout << "There is no file in current directory"<<endl;
+		system("pause");
+		return -1;
+	}
+
+	//get first file with .csv extension
+	FMap freq_map;
+
+	double maxfreq = getMaxFreqFromFile(FindData.cFileName);
+	freq_map.insert(FMap::value_type(maxfreq,FindData.cFileName));
+
+	//for each other file with .csv extension
+	while (FindNextFile(hFind, &FindData)){
+		maxfreq = getMaxFreqFromFile(FindData.cFileName);
+		freq_map.insert(FMap::value_type(maxfreq,FindData.cFileName));
+	}
+
+	//Sort and write the results 
+	writeResult(freq_map);
+
+	system("pause");
 	return 0;
 }
