@@ -85,6 +85,33 @@ void fft(CArray & x)
 	}
 }
 
+double getMaxFreqPos(const vector<Complex> & volts,uint N)
+{
+	Complex * volts_tmparray;
+	volts_tmparray = new Complex [N];
+
+	for(uint i=0;i<N;i++) volts_tmparray[i] = volts[i];	
+
+	CArray freq(volts_tmparray, N);
+	delete [] volts_tmparray;
+
+	//FFT
+	fft(freq);
+
+	//get absolute value of frequency
+	CArray abs_freq_tmp = freq.apply(cAbs);
+	vector<double> abs_freq;
+	abs_freq.reserve(N);
+
+	for(uint i=0;i<N;i++) abs_freq.push_back(abs_freq_tmp[i].real()); 
+
+	std::cout<<"Max Freq Pos get"<<endl;
+	uint pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
+	std::cout<< pos <<" in "<<N<<endl;
+
+	return pos;
+}
+
 int main()
 {
 	//initial Seconds Volts
@@ -99,37 +126,8 @@ int main()
 	seconds.resize(N);
 	volts.resize(N);
 
-
-	Complex * volts_tmparray;
-	volts_tmparray = new Complex [N];
-
-	for(uint i=0;i<N;i++){
-		volts_tmparray[i] = volts[i];
-		//cout<<volts_tmparray[i]<<endl;
-	}
-
-	CArray freq(volts_tmparray, N);
-	delete [] volts_tmparray;
-
-	fft(freq);
-	//cout<<"FFT"<<endl;
-	//for(uint i=0;i<N;i++){
-	//	cout<<freq[i]<<endl;
-	//}
-
-	//get abs of freq
-	cout<<"abs"<<endl;
-	CArray abs_freq_tmp = freq.apply(cAbs);
-	vector<double> abs_freq;
-	abs_freq.reserve(N);
-
-	for(uint i=0;i<N;i++){
-		abs_freq.push_back(abs_freq_tmp[i].real());
-	}
-
-	cout<<"max"<<endl;
-	uint pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
-	cout<< pos <<" in "<<N<<endl;
+	/*get max freq*/
+	double pos = getMaxFreqPos(volts,N);
 
 	Sleep(100000);
 	return 0;
