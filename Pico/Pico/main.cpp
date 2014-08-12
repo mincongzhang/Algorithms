@@ -1,6 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include <cstdlib>
+
 #include <string>
 #include <vector>
 #include <complex>
@@ -48,7 +51,7 @@ void getWave(string filename,vector<double> & seconds,vector<Complex> & volts)
 		volts.push_back(vod_c);
 	}
 
-	cout<<filename<<" get;"<<endl;
+	cout<<filename<<":"<<endl;
 }
 
 inline uint myFloor(const uint data_length){
@@ -85,8 +88,9 @@ void fft(CArray & x)
 	}
 }
 
-double getMaxFreqPos(const vector<Complex> & volts,uint N)
+double getMaxFreqPos(const vector<double> & seconds,const vector<Complex> & volts,uint N)
 {
+	//get volts in CArray
 	Complex * volts_tmparray;
 	volts_tmparray = new Complex [N];
 
@@ -103,17 +107,44 @@ double getMaxFreqPos(const vector<Complex> & volts,uint N)
 	vector<double> abs_freq;
 	abs_freq.reserve(N);
 
+	//get position of max frequency 
 	for(uint i=0;i<N;i++) abs_freq.push_back(abs_freq_tmp[i].real()); 
-
-	std::cout<<"Max Freq Pos get"<<endl;
-	uint pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
+	int pos = int(max_element(abs_freq.begin(),abs_freq.end())-abs_freq.begin());
+	std::cout<<"Max freq position:";
 	std::cout<< pos <<" in "<<N<<endl;
 
-	return pos;
+	//get max frequency
+	double max_t = seconds.at(N-1);
+	double Fs    = (N-1)/max_t;
+	double f_max = abs(double(pos) - double(N/2))*Fs/N;
+	cout<<"max freq:";
+	cout<<f_max<<endl;
+
+	return f_max;
+}
+
+void readAllFile()
+{
+	cout<<"reading..."<<endl;
+
+	ifstream inputFile;
+	WIN32_FIND_DATA FindData;
+	HANDLE hFind;
+	hFind = FindFirstFile("./*.csv", &FindData);
+	cout << FindData.cFileName << endl;
+
+	while (FindNextFile(hFind, &FindData))
+	{
+		cout << FindData.cFileName << endl;
+	}
+
+	inputFile.close();
 }
 
 int main()
 {
+	readAllFile();
+
 	//initial Seconds Volts
 	vector<double> seconds;
 	vector<Complex> volts;
@@ -127,7 +158,9 @@ int main()
 	volts.resize(N);
 
 	/*get max freq*/
-	double pos = getMaxFreqPos(volts,N);
+	double freq = getMaxFreqPos(seconds,volts,N);
+
+
 
 	Sleep(100000);
 	return 0;
