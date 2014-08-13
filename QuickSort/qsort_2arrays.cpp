@@ -1,3 +1,5 @@
+/*I realize that this qsort get it can be replaced by map/multimap. And map/multimap is more efficient (2*log(n)?)*/
+
 #include <windows.h>
 #include <stdio.h>
 
