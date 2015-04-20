@@ -6,7 +6,7 @@ class Node {
 private:
     char m_content;
     bool m_marker;
-    vector<Node*> m_children;
+    vector<Node*> m_children;		 //use hashmap or map here
 
 public:
     Node() { m_content = ' '; m_marker = false; }
