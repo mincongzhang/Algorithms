@@ -1,12 +1,18 @@
 #include <iostream>
 #include <vector>
+#include <map>
+
 using namespace std;
+
+class Node;
+typedef std::map<char,Node*> node_map;
+typedef node_map::value_type node_value;
 
 class Node {
 private:
     char m_content;
     bool m_marker;
-    vector<Node*> m_children;		 //use hashmap or map here
+    node_map m_children;		 //use hashmap or map here
 
 public:
     Node() { m_content = ' '; m_marker = false; }
@@ -14,26 +20,23 @@ public:
     
 	char content() { return m_content; }
     
-	void setContent(char c) { m_content = c; }
+	void setContent(const char c) { m_content = c; }
 	void setWordMarker() { m_marker = true; }
-	void appendChild(Node* child) { m_children.push_back(child); }
+	void appendChild(char c,Node* child) { m_children.insert(node_value(c,child)); }
 	
     bool wordMarker() { return m_marker; }
 
-    vector<Node*> children() { return m_children; }
-    Node* findChild(char c);
+    node_map children() { return m_children; }
+    Node* findChild(const char c);
 };
 
-Node* Node::findChild(char c)
+Node* Node::findChild(const char c)
 {
-    for ( int i = 0; i < m_children.size(); i++ )
-    {
-        Node* tmp = m_children.at(i);
-        if ( tmp->content() == c )
-        {
-            return tmp;
-        }
-    }
+	node_map::const_iterator iter = m_children.find(c);
+	if(iter != m_children.end()){
+		Node* tmp = iter->second;
+		return tmp;
+	}
 
     return NULL;
 }
@@ -72,7 +75,7 @@ void Trie::addWord(string s)
         {
             Node* tmp = new Node();
             tmp->setContent(s[i]);
-            current->appendChild(tmp);
+            current->appendChild(s[i],tmp);
             current = tmp;
         }
         if ( i == s.length() - 1 )
