@@ -23,6 +23,8 @@ public:
 	void setContent(const char c) { m_content = c; }
 	void setWordMarker() { m_marker = true; }
 	void appendChild(char c,Node* child) { m_children.insert(node_value(c,child)); }
+	//void appendChild(Node* child) {} //TODO:overload to insert multiple children at one time
+
 	
     bool wordMarker() { return m_marker; }
 
@@ -73,6 +75,7 @@ void Trie::addWord(string s)
         }
         else
         {
+            //TODO:Look into simplize this part
             Node* tmp = new Node();
             tmp->setContent(s[i]);
             current->appendChild(s[i],tmp);
