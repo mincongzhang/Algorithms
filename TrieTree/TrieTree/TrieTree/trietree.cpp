@@ -25,7 +25,6 @@ public:
 	void setContent(const char c) { m_content = c; }
 	void setWordMarker() { m_marker = true; }
 	bool wordMarker() { return m_marker; }
-
 	node_map children() { return m_children; }
 	Node* findChild(const char c);
 	Node* appendChild(char c);
