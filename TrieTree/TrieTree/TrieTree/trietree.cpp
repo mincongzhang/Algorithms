@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <string>
 
 using namespace std;
 
@@ -53,29 +54,60 @@ Node* Node::appendChild(const char c)
 class Trie {
 private:
 	Node* root;
-
+	std::vector<std::string> m_all_words;
 
 public:
 	Trie(){ root = new Node(); };
-	~Trie(){ delete this; }; //TODO: not sure if I should recursively delete?
+	~Trie(){ delete this; }; //TODO: not sure if I should recursively delete every node?
 
 	void addWord(std::string s);
 	void deleteWord(std::string s);
 	bool searchWord(std::string s);
-	void printAllWords(); //traverse tree
-	std::vector<std::string> getAllWords(); //traverse tree
+	void traverse(Node* root,std::string & tmp_string);
+	void getAllWords(); //traverse tree
+	void printAllWords();
 };
 
-void Trie::printAllWords()
+void Trie::printAllWords(){
+	getAllWords();
+	 	
+	for(unsigned int i=0;i<m_all_words.size();++i)
+	  std::cout<< m_all_words.at(i) <<std::endl;
+}
+
+
+void Trie::traverse(Node* current_node,std::string & tmp_string){
+	 if(!current_node) return;
+
+	 node_map current_children = current_node->children();
+
+	 node_map::const_iterator iter;
+	 for(iter = current_children.begin();iter!=current_children.end();++iter){
+
+		 tmp_string += iter->first;
+		 //iter->second is the Node*
+		 if( (iter->second)->wordMarker() ){
+			 
+			 m_all_words.push_back(tmp_string);
+			 
+			 //if get end, clear buffer
+			 if((iter->second)->children().empty())
+				tmp_string.clear();
+		 }
+
+		 traverse(iter->second,tmp_string);
+	 }
+
+}
+
+void Trie::getAllWords()
 {
 	Node* current = root;
+	std::string tmp_string;
+	traverse(root,tmp_string);
 
-	//std::string tmp;
-	//tmp+=node.content();
-	//if(	node->wordMarker()) cout<<tmp
-	//if reach end
-	//tmp("")
 }
+
 
 void Trie::addWord(std::string s)
 {
@@ -90,7 +122,8 @@ void Trie::addWord(std::string s)
 			current = current->appendChild(s[i]);
 	}
 
-	current->setWordMarker();
+	if(current != root)
+		current->setWordMarker();
 }
 
 bool Trie::searchWord(std::string s)
@@ -139,6 +172,12 @@ int main()
 
 	if(trie->searchWord(""))
 		cout<<"Found ''"<<endl;
+	else
+		cout<<"Failed to insert ''"<<endl;
+
+
+	cout<<"All words:"<<endl;
+	trie->printAllWords();
 
 	system("pause");
 }
