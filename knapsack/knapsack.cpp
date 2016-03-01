@@ -11,7 +11,7 @@ int value[N], weight[N];
 int c[N + 1][W + 1];
 
 void printc(int n, int w){
-	for (int i = 0; i < n; ++i){
+	for (int i = 0; i <= n; ++i){
 		for (int j = 0; j <= w; ++j){
 		    std::cout<<c[i][j]<<" ";
 		}
@@ -25,6 +25,7 @@ void knapsack(int n, int w){
 
 	std::cout << "item number: " << n << std::endl;
 	std::cout << "bag can carry weight: " << w << std::endl;
+	std::cout << std::endl;
 
 	memset(c, 0, sizeof(c));
 
@@ -35,6 +36,7 @@ void knapsack(int n, int w){
 			} else {                    // enough weight
 				c[i+1][j] = std::max( c[i][j], c[i][j - weight[i]] + value[i]);
 			}
+			std::cout << "current n: ["<< i<<"] current w: ["<<j<<"]"<<std::endl;
 			printc(n,w);
 		}
 	}
