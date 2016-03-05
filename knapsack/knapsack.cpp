@@ -37,7 +37,7 @@ void knapsack(int n, int w){
 				c[i+1][j] = c[i][j];
 			} else {                    // enough weight
 				c[i+1][j] = std::max( c[i][j],
-									/*Give up*/
+									  /*Give up*/
 									  c[i][j - weight[i]] + value[i]
 									  /*Take current item:-weight, +value*/
 									  //c[i][j - weight[i]] is the best solution without weight[i], then add current value
