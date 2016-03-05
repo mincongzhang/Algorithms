@@ -6,6 +6,8 @@
 #include <string>
 #include <algorithm>
 
+//http://www.csie.ntnu.edu.tw/~u91029/KnapsackProblem.html
+
 const int N = 100, W = 100000;
 int value[N], weight[N];
 int c[N + 1][W + 1];
@@ -34,7 +36,12 @@ void knapsack(int n, int w){
 			if (j - weight[i] < 0){		// not enough weight in bag
 				c[i+1][j] = c[i][j];
 			} else {                    // enough weight
-				c[i+1][j] = std::max( c[i][j], c[i][j - weight[i]] + value[i]);
+				c[i+1][j] = std::max( c[i][j],
+									/*Give up*/
+									  c[i][j - weight[i]] + value[i]
+									  /*Take current item:-weight, +value*/
+									  //c[i][j - weight[i]] is the best solution without weight[i], then add current value
+									);
 			}
 			std::cout << "current n: ["<< i<<"] current w: ["<<j<<"]"<<std::endl;
 			printc(n,w);
