@@ -15,7 +15,7 @@ int * buildNext( char * pattern ){
 	while (pattern_i < pattern_len - 1 ){
 		if( t < 0 || pattern[pattern_i] == pattern[t] ){ //match
 			N[ ++pattern_i ] = ++t;
-		} else { //失配
+		} else { //mismatch
 			t = N[t];
 		}
 	}
