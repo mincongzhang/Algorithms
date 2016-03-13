@@ -84,6 +84,8 @@ int match(char * text, char * pattern){
   int text_len = (int)std::strlen(text), text_i = 0;
   int pattern_len = (int)std::strlen(pattern), pattern_i = 0;
 
+  //if text_len < pattern_len, will return the end of text (text_len)
+
   std::cout<<"text len:"<<text_len<<std::endl;
   std::cout<<"text:"<<text<<std::endl;
   std::cout<<"pattern len:"<<pattern_len<<std::endl;
@@ -105,7 +107,7 @@ int match(char * text, char * pattern){
 int main(){
   std::cout<<"KMP:"<<std::endl;
 
-  int m = match("abchichinllabbba","chinchilla");
+  int m = match("abca","chinchilla");
   //int m = match("abchichinllabbba","abcabcabcabcabcacdacdacdacdaweaweaweawe");
 
   std::cout<<"Match point in text: "<<m<<std::endl;
