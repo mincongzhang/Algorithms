@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <cstring>
 
 int * buildNext( char * pattern ){
 	size_t pattern_len = strlen(pattern), pattern_i = 0; 
