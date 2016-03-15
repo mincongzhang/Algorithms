@@ -47,6 +47,10 @@ int * buildNext( char * pattern ){
     Should satisfy:
     Next[i+1] <= Next[i]+1
     Next[i+1] == Next[i]+1, iff P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]]
+
+    i.e.
+    if P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]],
+    Next[i+1] = Next[i]+1
   */
 
   while (pattern_i < pattern_len - 1 ){ //Recurrent
@@ -107,7 +111,7 @@ int match(char * text, char * pattern){
 int main(){
   std::cout<<"KMP:"<<std::endl;
 
-  int m = match("abca","chinchilla");
+  int m = match("abca","chinchichi");
   //int m = match("abchichinllabbba","abcabcabcabcabcacdacdacdacdaweaweaweawe");
 
   std::cout<<"Match point in text: "<<m<<std::endl;
