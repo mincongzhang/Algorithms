@@ -52,7 +52,6 @@ int * buildNext( char * pattern ){
     Should satisfy:
     Next[i+1] <= Next[i]+1
     Next[i+1] == Next[i]+1, iff P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]]
-
     i.e.
     if P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]],
     Next[i+1] = Next[i]+1
@@ -73,7 +72,7 @@ int * buildNext( char * pattern ){
 
       //IMPROVE
       //N[ pattern_i ] = t;
-      N[ pattern_i ] = (pattern[pattern_i] != pattern[t] ? t : N[t] );
+      N[ pattern_i ] = (pattern[pattern_i] == pattern[t] ? N[t] : t );
       std::cout<<"*N["<<pattern_i<<"]     = ["<<t<<"]"<<std::endl;
 
       //N[++pattern_i] = ++t;
@@ -119,7 +118,7 @@ int match(char * text, char * pattern){
 int main(){
   std::cout<<"KMP:"<<std::endl;
 
-  int m = match("abca","chinchichi");
+  int m = match("xxxchinchichicccc","chinchichi");
   //int m = match("abchichinllabbba","abcabcabcabcabcacdacdacdacdaweaweaweawe");
 
   std::cout<<"Match point in text: "<<m<<std::endl;
