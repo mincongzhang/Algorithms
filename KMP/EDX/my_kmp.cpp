@@ -50,11 +50,8 @@ int match(const std::string & text, const std::string & pattern){
 
   std::vector<int> next(pattern.size(),0);
 
-  printNext(next);
-
   buildNext(pattern,next);
   printNext(next);
-
 
   int text_len = text.size();
   int pattern_len = pattern.size();
@@ -68,8 +65,6 @@ int match(const std::string & text, const std::string & pattern){
       pattern_i = next[pattern_i];
     }
   }
-
-  printNext(next);
 
   return (text_i - pattern_i);
 }
