@@ -13,8 +13,8 @@ void printPatterni(char * pattern,int pattern_i){
   int pattern_len = (int)std::strlen(pattern);
   std::cout<<"pattern_i : [ ";
   for(int i(0);i<pattern_len;++i){
-    if(i == pattern_i)   std::cout<<"* ";
-    else                 std::cout<<"  ";
+    if(i == pattern_i)   std::cout<<"*  ";
+    else                 std::cout<<"   ";
   }
   std::cout<<"]\n"<<std::endl;
 }
@@ -22,15 +22,20 @@ void printPatterni(char * pattern,int pattern_i){
 void printPattern(char * pattern){
   int pattern_len = (int)std::strlen(pattern);
   std::cout<<"pattern   : [ ";
-  for(int i(0);i<pattern_len;++i) std::cout<<pattern[i]<<" ";
+  for(int i(0);i<pattern_len;++i) std::cout<<pattern[i]<<"  ";
   std::cout<<"]"<<std::endl;
 }
 
 void printNext(char * pattern,int * next){
   int len = (int)std::strlen(pattern);
   std::cout<<"next      : [";
-  for(int i(0);i<len;++i) std::cout<<next[i]<<" ";
-  std::cout<<"]"<<std::endl;
+  for(int i(0);i<len;++i){
+    if(next[i]<0)
+    std::cout<<next[i]<<" ";
+    else
+      std::cout<<" "<<next[i]<<" ";
+  }
+  std::cout<<" ]"<<std::endl;
 }
 
 void printPatternAndNext(char * pattern, int * next){
@@ -47,7 +52,6 @@ int * buildNext( char * pattern ){
     Should satisfy:
     Next[i+1] <= Next[i]+1
     Next[i+1] == Next[i]+1, iff P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]]
-
     i.e.
     if P[i] == P[Next[i]], P[Next[Next[i]]] ... P[N[0]],
     Next[i+1] = Next[i]+1
@@ -65,7 +69,10 @@ int * buildNext( char * pattern ){
       }
 
       t++;  pattern_i++;
-      N[ pattern_i ] = t;
+
+      //IMPROVE
+      //N[ pattern_i ] = t;
+      N[ pattern_i ] = (pattern[pattern_i] == pattern[t] ? N[t] : t );
       std::cout<<"*N["<<pattern_i<<"]     = ["<<t<<"]"<<std::endl;
 
       //N[++pattern_i] = ++t;
@@ -111,7 +118,7 @@ int match(char * text, char * pattern){
 int main(){
   std::cout<<"KMP:"<<std::endl;
 
-  int m = match("abca","chinchichi");
+  int m = match("xxxchinchichicccc","chinchichi");
   //int m = match("abchichinllabbba","abcabcabcabcabcacdacdacdacdaweaweaweawe");
 
   std::cout<<"Match point in text: "<<m<<std::endl;
