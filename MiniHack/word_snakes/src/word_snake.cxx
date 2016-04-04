@@ -5,7 +5,6 @@
 #include <boost/algorithm/string.hpp>
 
 #define log(msg) do{ std::cout<<msg<<std::endl;}while(0)
-//std::ifstream infile("/home/user/jopower/londonminihacks/april2016/input_files/long.txt");
 std::ifstream infile("long.txt");
 //std::ifstream infile("medium.txt");
 const int DICT_SIZE = 26;
