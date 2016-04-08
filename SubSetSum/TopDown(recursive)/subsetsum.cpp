@@ -16,6 +16,7 @@
 
 typedef std::vector<int> SumArray;
 typedef std::vector<SumArray> SumMap;
+typedef SumMap TakenMap;
 
 void printMap(const SumMap & map){
   for(SumMap::const_iterator i=map.begin(); i!=map.end();++i){
@@ -29,17 +30,25 @@ void printMap(const SumMap & map){
 }
 
 
-int subsum(const std::vector<int> & num_set,SumMap & sum_map, int n, int s){
+int subsum(const std::vector<int> & num_set,SumMap & sum_map, TakenMap & taken_map, int n, int s){
   if (n == 0) return 0;
   if (sum_map[n][s]>0) return sum_map[n][s];
 
-  printMap(sum_map);
+  int take_sum     = subsum(num_set, sum_map, taken_map, n-1, s-num_set[n]) + num_set[n];
+  int not_take_sum = subsum(num_set, sum_map, taken_map, n-1, s);
 
-  int current_sum = subsum(num_set,sum_map,n-1, s-num_set[n]) + num_set[n];
-  if(current_sum > s){
-    return subsum(num_set,sum_map,n-1, s);
+  if(take_sum > s){
+    return not_take_sum;
+  }
+
+  if(take_sum > not_take_sum){
+    taken_map[n][s] = 1;
+    sum_map[n][s] = take_sum;
+    printMap(sum_map);
+
+    return take_sum;
   } else {
-    return sum_map[n][s] = std::max(current_sum,subsum(num_set,sum_map,n-1, s));
+    return not_take_sum;
   }
 }
 
@@ -49,13 +58,15 @@ int main(){
   std::vector<int> num_set;
   num_set.push_back(3);
   num_set.push_back(34);
-  num_set.push_back(4);
+  //num_set.push_back(4);
   num_set.push_back(12);
-  num_set.push_back(5);
-  num_set.push_back(2);
+  //num_set.push_back(5);
+  //num_set.push_back(2);
 
   SumArray sum_array(sum+1,0);
   SumMap sum_map(num_set.size()+1,sum_array);
-  int result = subsum(num_set,sum_map,num_set.size(),sum);
+  TakenMap taken_map(sum_map);
+
+  int result = subsum(num_set,sum_map,taken_map,num_set.size(),sum);
   std::cout<<"result:"<<result<<std::endl;
 }
