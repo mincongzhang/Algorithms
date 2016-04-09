@@ -64,7 +64,7 @@ int main(){
   num_set.push_back(2);
 
   SumArray sum_array(sum+1,0);
-  SumMap sum_map(num_set.size()+1,sum_array);
+  SumMap sum_map(num_set.size(),sum_array);
   TakenMap taken_map(sum_map);
 
   int result = subsum(num_set,sum_map,taken_map,num_set.size()-1,sum);
