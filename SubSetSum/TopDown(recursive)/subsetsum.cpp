@@ -31,7 +31,7 @@ void printMap(const SumMap & map){
 
 
 int subsum(const std::vector<int> & num_set,SumMap & sum_map, TakenMap & taken_map, int n, int s){
-  if (n == 0) return 0;
+  if (n < 0 || s < 0) return 0;
   if (sum_map[n][s]>0) return sum_map[n][s];
 
   int take_sum     = subsum(num_set, sum_map, taken_map, n-1, s-num_set[n]) + num_set[n];
@@ -58,10 +58,10 @@ int main(){
   std::vector<int> num_set;
   num_set.push_back(3);
   num_set.push_back(34);
-  //num_set.push_back(4);
+  num_set.push_back(4);
   num_set.push_back(12);
-  //num_set.push_back(5);
-  //num_set.push_back(2);
+  num_set.push_back(5);
+  num_set.push_back(2);
 
   SumArray sum_array(sum+1,0);
   SumMap sum_map(num_set.size()+1,sum_array);
